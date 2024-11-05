@@ -8,16 +8,16 @@ class InvalidCredentials(HTTPException):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-class UserNotFound(HTTPException):
+class EmailAlreadyTaken(HTTPException):
     def __init__(self):
         super().__init__(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already taken",
         )
 
-class UserAlreadyExists(HTTPException):
+class FailedToGetUserInfo(HTTPException):
     def __init__(self):
         super().__init__(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="User already exists",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to get user info",
         )
