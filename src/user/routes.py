@@ -6,6 +6,8 @@ from src.user.schemas import UserRegisterSchema
 from src.db import get_db_session
 from src.user.service import UserService
 from src.user.dependencies import get_user_service
+from src.auth.dependencies import get_current_user
+from src.auth.schemas import TokenData
 
 router = APIRouter(
     prefix="/api/v1/user",
@@ -13,12 +15,19 @@ router = APIRouter(
 )
 
 @router.post('/register')
-async def register(user: UserRegisterSchema,
-                   userService: UserService = Depends(get_user_service),
-                   ):
+async def register(
+    user: UserRegisterSchema,
+    userService: UserService = Depends(get_user_service),
+    ):
     return await userService.register(user)
 
 # Reset password and forgot password routes
+
+@router.post("/change-password")
+async def change_password(payload: dict, user: TokenData = Depends(get_current_user),
+                          userService: UserService = Depends(get_user_service)):
+    return await userService.change_password(user.user_id, payload.get("old_password"), payload.get("new_password"))
+
 
 @router.post("/forgot-password")
 async def forgot_password(payload: dict, db: AsyncSession = Depends(get_db_session)):

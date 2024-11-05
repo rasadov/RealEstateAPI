@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from fastapi.responses import JSONResponse, Response
+from fastapi import Request
 from httpx import AsyncClient
 
 from src.auth import exceptions
-from src.auth import utils
 from src.auth import oauth2
 from src.user.service import UserService
 from src.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
@@ -14,20 +14,18 @@ class AuthService:
 
     userService: UserService
 
+    @staticmethod
+    async def _parse_token(request: Request, tokenType: str) -> dict:
+        """Parse token from request"""
+        token = request.cookies.get("access_token")
+        if not token:
+            raise exceptions.TokenNotFound
+        return oauth2.verify_action_token(token, tokenType, exceptions.CredentialsException)
 
-    async def login(self, username: str, password: str) -> dict:
-        """Login user"""
-        user = await self.userService.get_user_by_email(username)
-
-        if user is None or not utils.verify_password(password, user.password_hash):
-            raise exceptions.InvalidCredentials
-
-        return await self.authenticate(user.email)
-
-    async def authenticate(self, username: str) -> dict:
+    async def authenticate(self, email: str) -> dict:
         """Authenticate user"""
 
-        user = await self.userService.get_user_by_email(username)
+        user = await self.userService.get_user_by_email(email)
         tokens = oauth2.generate_auth_tokens(user.id)
 
         response = JSONResponse(content={
@@ -41,12 +39,26 @@ class AuthService:
 
         return response
 
-    @staticmethod
-    async def refresh_token(response: Response, user_id: int) -> dict:
+    async def login(self, email: str, password: str) -> dict:
+        """Login user"""
+        user = await self.userService.get_user_by_email(email)
+
+        if user is None or not user.verify_password(password):
+            raise exceptions.InvalidCredentials
+
+        return await self.authenticate(user.email)
+
+    async def refresh_tokens(self, request: Request) -> dict:
         """Refresh token"""
-        access_token = oauth2.create_access_token(data={"user_id": user_id})
-        response.set_cookie("access_token", access_token)
-        return {"message": "Token refreshed"}
+        user_id = await self._parse_token(request, "refresh_token")
+        user = self.userService.userRepository.get_or_401(user_id)
+        tokens = oauth2.generate_auth_tokens(user.id)
+
+        response = JSONResponse(content={"message": "Token refreshed"})
+        response.set_cookie("access_token", tokens["access_token"])
+        response.set_cookie("refresh_token", tokens["refresh_token"])
+
+        return response
 
     @staticmethod
     async def logout(response: Response) -> dict:
@@ -79,5 +91,5 @@ class AuthService:
         if user:
             return await self.authenticate(user.email)
 
-        new_user = await self.userService.register(user_info.get("email"), "")
+        new_user = await self.userService.register(user_info.get("email"), "").get("email")
         return await self.authenticate(new_user.email)

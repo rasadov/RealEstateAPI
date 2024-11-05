@@ -17,6 +17,8 @@ class AuthTokenTypes(str, Enum):
 
     ACCESS = "auth-access"
     REFRESH = "auth-refresh"
+    FORGOT_PASSWORD = "forgot-password"
+
 
 def _create_auth_token(data: dict, expire_minutes: int):
     to_encode = data.copy()
@@ -35,6 +37,11 @@ def create_refresh_token(user_id: int):
     data = {"sub": AuthTokenTypes.REFRESH, "user_id": user_id}
     return _create_auth_token(data, REFRESH_TOKEN_EXPIRE_MINUTES)
 
+def create_forgot_password_token(user_id: int):
+    """Create forgot password token"""
+    data = {"sub": AuthTokenTypes.FORGOT_PASSWORD, "user_id": user_id}
+    return _create_auth_token(data, ACCESS_TOKEN_EXPIRE_MINUTES)
+
 def generate_auth_tokens(user_id: int):
     """Generate access and refresh tokens"""
     access_token = create_access_token(user_id)
@@ -46,7 +53,7 @@ def generate_auth_tokens(user_id: int):
     }
 
 
-def _verify_token(token: str, credentials_exception):
+def _verify_token(token: str, credentials_exception) -> TokenData:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("user_id")
@@ -55,29 +62,8 @@ def _verify_token(token: str, credentials_exception):
     except jwt.PyJWTError:
         raise credentials_exception
 
-async def get_current_user(request: Request):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    access_token = request.cookies.get("access_token")
-
-    if not access_token:
-        raise credentials_exception
-
-    try:
-        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("user_id")
-        if user_id is None:
-            raise credentials_exception
-        token_data = TokenData(user_id=user_id)
-    except jwt.PyJWTError as e:
-        raise credentials_exception
-    return token_data
-
-def verify_action_token(token: str, action: str, credentials_exception):
+def verify_action_token(token: str, action: str, credentials_exception) -> int | None:
     token_data = _verify_token(token, credentials_exception)
-    if token_data and token_data.id and token_data.sub == action:
-        return token_data.id
+    if token_data and token_data.user_id and token_data.sub == action:
+        return token_data.user_id
     return None

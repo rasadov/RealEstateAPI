@@ -21,3 +21,18 @@ class FailedToGetUserInfo(HTTPException):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to get user info",
         )
+
+class CredentialsException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+class TokenNotFound(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Token not found",
+        )

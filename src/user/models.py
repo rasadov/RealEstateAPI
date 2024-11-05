@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, Boolean
 
 from src.base.models import CreateTimestampMixin
+from src.auth import utils
 
 class User(CreateTimestampMixin):
     """User model."""
@@ -13,3 +14,10 @@ class User(CreateTimestampMixin):
     password_hash = Column(String, nullable=False)
     role = Column(String, default="user")
     is_superuser = Column(Boolean, default=False)
+
+    def verify_password(self, password: str) -> bool:
+        """Verify user password"""
+        return utils.verify_password(password, self.password_hash)
+
+    def __str__(self) -> str:
+        return self.email
