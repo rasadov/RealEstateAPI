@@ -29,3 +29,15 @@ async def get_db_session():
             yield session
         finally:
             await session.close()
+
+async def initialize_redis():
+    """Initialize Redis connection."""
+    pass
+
+async def close_database():
+    """Close database engine."""
+    await engine.dispose()
+
+async def close_redis():
+    """Close Redis connection."""
+    pass

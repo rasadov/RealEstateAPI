@@ -3,8 +3,10 @@ from fastapi.responses import JSONResponse, Response
 from fastapi import Request
 from httpx import AsyncClient
 
+from src.auth.utils import hash_password
 from src.auth import exceptions
 from src.auth import oauth2
+from src.user.models import User
 from src.user.service import UserService
 from src.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 
@@ -48,6 +50,22 @@ class AuthService:
 
         return await self.authenticate(user.email)
 
+    async def register(self, payload) -> dict:
+        """Register user"""
+        user_exists = await self.userService.userRepository.get_user_by(email=payload.get("email"))
+        if user_exists:
+            raise exceptions.EmailAlreadyTaken
+
+        new_user = User(
+            email=payload.get("email"),
+            password_hash=hash_password(payload.get("password")),
+        )
+        await self.userService.userRepository.add(new_user)
+        await self.userService.userRepository.commit()
+        await self.userService.userRepository.refresh(new_user)
+
+        return await self.authenticate(new_user.email)
+
     async def refresh_tokens(self, request: Request) -> dict:
         """Refresh token"""
         user_id = await self._parse_token(request, "refresh_token")
@@ -90,6 +108,10 @@ class AuthService:
 
         if user:
             return await self.authenticate(user.email)
+        
+        regitration_data = {
+            "email": user_info.get("email"),
+            "password": "",
+        }
 
-        new_user = await self.userService.register(user_info.get("email"), "").get("email")
-        return await self.authenticate(new_user.email)
+        return await self.register(regitration_data)

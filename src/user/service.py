@@ -3,9 +3,7 @@ from dataclasses import dataclass
 from src.base.utils import send_email
 from src.auth import exceptions
 from src.user.repository import UserRepository
-from src.user.schemas import UserRegisterSchema
 from src.user.models import User
-from src.auth.utils import hash_password
 from src.auth import oauth2
 
 @dataclass
@@ -19,26 +17,10 @@ class UserService:
         user = await self.userRepository.get_user_by(email=email)
         return user
 
-    async def register(self, user: UserRegisterSchema) -> dict:
-        """Register user"""
-        user_exists = await self.userRepository.get_user_by(email=user.email)
-        if user_exists:
-            raise exceptions.EmailAlreadyTaken
-
-        new_user = User(
-            email=user.email,
-            password_hash=hash_password(user.password),
-        )
-        await self.userRepository.add(new_user)
-        await self.userRepository.commit()
-        await self.userRepository.refresh(new_user)
-
-        return {
-            "message": "User created successfully",
-            "email": new_user.email,
-            "user_id": new_user.id,
-            "role": new_user.role
-        }
+    async def check_username_or_email(self, string: str) -> bool:
+        """Check if username or email taken"""
+        user = await self.userRepository.get_user_by(username=string, email=string)
+        return user is None
 
     async def change_password(self, id: int, old_password: str, new_password: str) -> dict:
         """Change user password"""
@@ -46,7 +28,7 @@ class UserService:
         if not user or not user.verify_password(old_password):
             raise exceptions.InvalidCredentials
 
-        user.password_hash = hash_password(new_password)
+        user.change_password(new_password)
         await self.userRepository.commit()
 
         return {"message": "Password changed successfully"}
@@ -65,3 +47,46 @@ class UserService:
         )
 
         return {"message": "Email sent with password reset instructions"}
+
+    async def reset_password(self, token: str, password: str) -> dict:
+        """Reset user password"""
+        user_id = oauth2.verify_action_token(token,
+                                             oauth2.AuthTokenTypes.FORGOT_PASSWORD,
+                                             exceptions.CredentialsException)
+        if user_id is None:
+            raise exceptions.InvalidToken
+
+        user = await self.userRepository.get_or_401(user_id)
+        user.change_password(password)
+        await self.userRepository.commit()
+
+        return {"message": "Password reset successfully"}
+
+    async def send_confirm_email(self, email: str) -> dict:
+        """Send confirm email"""
+        user = await self.userRepository.get_user_by(email=email)
+        if user is None:
+            raise exceptions.UserNotFound
+
+        token = oauth2.create_confirm_email_token(user.id)
+        send_email(
+            email,
+            "Confirm email",
+            f"Click on the link to confirm your email: /confirm-email?token={token}" # TO DO: Add frontend URL
+        )
+
+        return {"message": "Email sent with email confirmation instructions"}
+
+    async def confirm_email(self, token: str) -> dict:
+        """Confirm user email"""
+        user_id = oauth2.verify_action_token(token,
+                                             oauth2.AuthTokenTypes.CONFIRM_EMAIL,
+                                             exceptions.CredentialsException)
+        if user_id is None:
+            raise exceptions.InvalidToken
+
+        user = await self.userRepository.get_or_401(user_id)
+        user.confirm_email()
+        await self.userRepository.commit()
+
+        return {"message": "Email confirmed successfully"}

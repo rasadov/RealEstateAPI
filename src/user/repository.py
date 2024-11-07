@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from src.user.models import User
 from src.base.repository import BaseRepository
-from src.user import exceptions
+from src.auth import exceptions
 
 @dataclass
 class UserRepository(BaseRepository[User]):
@@ -15,7 +15,7 @@ class UserRepository(BaseRepository[User]):
         """Get user by any field"""
         result = await self.session.execute(select(User).filter_by(**kwargs))
         return result.scalars().first()
-    
+
     async def get_or_404(self, user_id: int) -> User:
         """Get user by id or raise 404"""
         result = await self.session.execute(select(User).filter(User.id == user_id))
@@ -23,7 +23,7 @@ class UserRepository(BaseRepository[User]):
         if not user:
             raise exceptions.UserNotFound
         return user
-    
+
     async def get_or_401(self, user_id: int) -> User:
         """Get user by id or raise 401"""
         result = await self.session.execute(select(User).filter(User.id == user_id))
@@ -31,7 +31,7 @@ class UserRepository(BaseRepository[User]):
         if not user:
             raise exceptions.Unauthorized
         return user
-    
+
     async def get_users_page(self, limit: int, offset: int) -> list[User]:
         """Get users page"""
         result = await self.session.execute(select(User).limit(limit).offset(offset))

@@ -12,6 +12,21 @@ router = APIRouter(
     tags=["Authentication"]
 )
 
+@router.post("/register")
+async def register(
+    user: dict,
+    auth_service: AuthService = Depends(get_auth_service),
+    ):
+    return await auth_service.register(user)
+
+@router.post("/login")
+async def login(
+    user: dict,
+    response: Response,
+    auth_service: AuthService = Depends(get_auth_service),
+    ):
+    return await auth_service.login(user, response)
+
 @router.post('/logout')
 async def logout(
     response: Response,
