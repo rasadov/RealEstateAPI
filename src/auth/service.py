@@ -50,7 +50,7 @@ class AuthService:
 
         return await self.authenticate(user.email)
 
-    async def register(self, payload) -> dict:
+    async def register(self, payload : dict) -> dict:
         """Register user"""
         user_exists = await self.userService.userRepository.get_user_by(email=payload.get("email"))
         if user_exists:

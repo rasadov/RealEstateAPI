@@ -19,7 +19,7 @@ REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 8
 
 DATABASE_URL = "postgresql+asyncpg://%s:%s@%s:%s/%s".format(
     os.getenv("DB_USER"),
-    os.getenv("DB_PASSWORD"),
+    os.getenv("DB_PASS"),
     os.getenv("DB_HOST"),
     os.getenv("DB_PORT"),
     os.getenv("DB_NAME"),

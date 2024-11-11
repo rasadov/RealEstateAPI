@@ -7,13 +7,14 @@ from src.db import (
 )
 from src.user.repository import UserRepository
 from src.user.service import UserService
-
+from src.staticfiles.dependencies import get_static_files_manager
 
 def get_user_repository(
     session: AsyncSession = Depends(get_db_session),
+    static_files_manager=Depends(get_static_files_manager),
 ):
     """Dependency injector for user repository"""
-    return UserRepository(session)
+    return UserRepository(session, static_files_manager)
 
 
 def get_user_service(

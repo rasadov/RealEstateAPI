@@ -36,3 +36,8 @@ class UserRepository(BaseRepository[User]):
         """Get users page"""
         result = await self.session.execute(select(User).limit(limit).offset(offset))
         return result.scalars().all()
+
+    async def get_users_count(self) -> int:
+        """Get users count"""
+        result = await self.session.execute(select(User).count())
+        return result.scalar()

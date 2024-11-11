@@ -1,21 +1,30 @@
-from sqlalchemy import Column, String, Boolean
+from typing import TYPE_CHECKING
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.base.models import CreateTimestampMixin
+from src.base.models import CreateTimestampMixin, CustomBase
 from src.auth import utils
+
+if TYPE_CHECKING:
+    from src.property.models import Property, PropertyLike
 
 class User(CreateTimestampMixin):
     """User model."""
 
     __tablename__ = "UserModel"
 
-    username = Column(String, unique=True, nullable=False)
-    name = Column(String, nullable=False)
-    bio = Column(String, nullable=True)
-    email = Column(String, unique=True, nullable=False)
-    password_hash = Column(String, nullable=False)
-    role = Column(String, default="user")
-    is_superuser = Column(Boolean, default=False)
-    is_confirmed = Column(Boolean, default=False)
+    username: Mapped[str] = mapped_column(unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
+    bio: Mapped[str] = mapped_column(nullable=True)
+    email: Mapped[str] = mapped_column(unique=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(nullable=False)
+    is_confirmed: Mapped[bool] = mapped_column(default=False)
+    role_id: Mapped[int] = mapped_column(ForeignKey("RoleModel.id"), nullable=True)
+
+    role: Mapped["Roles"] = relationship("Roles")
+    properties: Mapped[list["Property"]] = relationship("Property", back_populates="owner")
+    likes: Mapped[list["PropertyLike"]] = relationship("PropertyLike", back_populates="user")
+
 
     def verify_password(self, password: str) -> bool:
         """Verify user password"""
@@ -29,5 +38,9 @@ class User(CreateTimestampMixin):
         """Confirm user email"""
         self.is_confirmed = True
 
-    def __str__(self) -> str:
-        return self.email
+class Roles(CustomBase):
+    """Role model."""
+
+    __tablename__ = "RoleModel"
+
+    name: Mapped[str] = mapped_column(nullable=False)

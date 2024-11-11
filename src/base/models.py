@@ -1,7 +1,7 @@
 """Base model class and utils."""
 from datetime import datetime
 
-from sqlalchemy import func
+from sqlalchemy import func, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from src.db import Base
 
@@ -12,7 +12,7 @@ class CustomBase(Base):
     __abstract__ = True
     __repr_fields__: tuple[str, ...] = ("id",)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     def __str__(self):
         return self.__repr__()
@@ -24,7 +24,6 @@ class CustomBase(Base):
         )
         return f"{self.__class__.__name__}({attrs})"
 
-
 class CreateTimestampMixin(CustomBase):
     """
     Mixin for adding created at field to the model.
@@ -34,4 +33,4 @@ class CreateTimestampMixin(CustomBase):
 
     __abstract__ = True
 
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

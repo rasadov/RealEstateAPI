@@ -7,6 +7,7 @@ from typing import Generic, TypeVar
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base.models import CustomBase
+from src.staticfiles.manager import BaseStaticFilesManager
 
 T = TypeVar("T", bound=CustomBase)
 
@@ -26,7 +27,7 @@ class BaseRepository(ABC, Generic[T]):
         self.session.add_all(items)
 
     async def delete(self, item: T) -> None:
-        """Removes given item into database session."""
+        """Removes the given item from the database session."""
         await self.session.delete(item)
 
     async def flush(self) -> None:
