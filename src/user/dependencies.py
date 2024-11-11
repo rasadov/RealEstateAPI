@@ -16,7 +16,6 @@ def get_user_repository(
     """Dependency injector for user repository"""
     return UserRepository(session, static_files_manager)
 
-
 def get_user_service(
     user_repository: UserRepository = Depends(get_user_repository),
 ):

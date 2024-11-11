@@ -9,6 +9,7 @@ from src.user.models import User
 if TYPE_CHECKING:
     from src.user.models import User
 
+
 class Property(CreateTimestampMixin):
     """Property model."""
 
@@ -23,11 +24,14 @@ class Property(CreateTimestampMixin):
     is_sold: Mapped[bool] = mapped_column(Boolean, default=False)
     sold_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     main_image_id: Mapped[int] = mapped_column(Integer, ForeignKey("PropertyImageModel.id"), nullable=True)
+    approved: Mapped[bool] = mapped_column(Boolean, default=False)
 
     main_image: Mapped["PropertyImage"] = relationship("PropertyImage", foreign_keys=[main_image_id])
     images: Mapped[list["PropertyImage"]] = relationship("PropertyImage", back_populates="property")
     likes: Mapped[list["PropertyLike"]] = relationship("PropertyLike", back_populates="property")
 
+    def approve(self):
+        self.approved = True
 
 class PropertyImage(CustomBase):
     """Property image model."""

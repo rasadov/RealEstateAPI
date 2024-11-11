@@ -27,25 +27,26 @@ def _create_auth_token(data: dict, expire_minutes: int) -> str:
 
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+def create_token(user_id: int, token_type: AuthTokenTypes, expire_minutes: int) -> str:
+    """Create a token with the specified type and expiration"""
+    data = {"sub": token_type, "user_id": user_id}
+    return _create_auth_token(data, expire_minutes)
+
 def create_access_token(user_id: int) -> str:
     """Create access token"""
-    data = {"sub": AuthTokenTypes.ACCESS, "user_id": user_id}
-    return _create_auth_token(data, ACCESS_TOKEN_EXPIRE_MINUTES)
+    return create_token(user_id, AuthTokenTypes.ACCESS, ACCESS_TOKEN_EXPIRE_MINUTES)
 
 def create_refresh_token(user_id: int) -> str:
     """Create refresh token"""
-    data = {"sub": AuthTokenTypes.REFRESH, "user_id": user_id}
-    return _create_auth_token(data, REFRESH_TOKEN_EXPIRE_MINUTES)
+    return create_token(user_id, AuthTokenTypes.REFRESH, REFRESH_TOKEN_EXPIRE_MINUTES)
 
 def create_forgot_password_token(user_id: int) -> str:
     """Create forgot password token"""
-    data = {"sub": AuthTokenTypes.FORGOT_PASSWORD, "user_id": user_id}
-    return _create_auth_token(data, ACCESS_TOKEN_EXPIRE_MINUTES)
+    return create_token(user_id, AuthTokenTypes.FORGOT_PASSWORD, ACCESS_TOKEN_EXPIRE_MINUTES)
 
 def create_confirm_email_token(user_id: int) -> str:
     """Create confirm email token"""
-    data = {"sub": AuthTokenTypes.CONFIRM_EMAIL, "user_id": user_id}
-    return _create_auth_token(data, ACCESS_TOKEN_EXPIRE_MINUTES)
+    return create_token(user_id, AuthTokenTypes.CONFIRM_EMAIL, ACCESS_TOKEN_EXPIRE_MINUTES)
 
 def generate_auth_tokens(user_id: int) -> dict:
     """Generate access and refresh tokens"""

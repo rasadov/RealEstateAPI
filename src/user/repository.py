@@ -3,13 +3,17 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from src.user.models import User
 from src.base.repository import BaseRepository
+from src.staticfiles.manager import BaseStaticFilesManager
+from src.user.models import User
 from src.auth import exceptions
+
 
 @dataclass
 class UserRepository(BaseRepository[User]):
-    "User repository"
+    """User repository"""
+
+    staticFilesManager: BaseStaticFilesManager
 
     async def get_user_by(self, **kwargs) -> User:
         """Get user by any field"""
