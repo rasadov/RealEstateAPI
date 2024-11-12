@@ -3,9 +3,9 @@ Contains routes for user authentication and authorization.
 """
 from fastapi import APIRouter, Depends, Response
 
-from src.auth.service import AuthService
-from src.auth.dependencies import get_auth_service
-from src.config import GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI
+from app.auth.service import AuthService
+from app.auth.dependencies import get_auth_service
+from app.config import GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI
 
 router = APIRouter(
     prefix="/api/v1/auth",

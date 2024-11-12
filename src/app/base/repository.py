@@ -6,8 +6,8 @@ from typing import Generic, TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.base.models import CustomBase
-from src.staticfiles.manager import BaseStaticFilesManager
+from app.base.models import CustomBase
+from app.staticfiles.manager import BaseStaticFilesManager
 
 T = TypeVar("T", bound=CustomBase)
 

@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, Integer, Float, String, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.base.models import CreateTimestampMixin, CustomBase
-from src.user.models import User
+from app.base.models import CreateTimestampMixin, CustomBase
+from app.user.models import User
 
 if TYPE_CHECKING:
-    from src.user.models import User
+    from app.user.models import User
 
 
 class Property(CreateTimestampMixin):

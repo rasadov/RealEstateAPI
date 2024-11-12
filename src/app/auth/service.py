@@ -3,12 +3,12 @@ from fastapi.responses import JSONResponse, Response
 from fastapi import Request
 from httpx import AsyncClient
 
-from src.auth.utils import hash_password
-from src.auth import exceptions
-from src.auth import oauth2
-from src.user.models import User
-from src.user.service import UserService
-from src.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
+from app.auth.utils import hash_password
+from app.auth import exceptions
+from app.auth import oauth2
+from app.user.models import User
+from app.user.service import UserService
+from app.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 
 @dataclass
 class AuthService:

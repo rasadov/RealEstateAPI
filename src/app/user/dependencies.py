@@ -2,12 +2,12 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db import (
+from app.db import (
     get_db_session,
 )
-from src.user.repository import UserRepository
-from src.user.service import UserService
-from src.staticfiles.dependencies import get_static_files_manager
+from app.user.repository import UserRepository
+from app.user.service import UserService
+from app.staticfiles.dependencies import get_static_files_manager
 
 def get_user_repository(
     session: AsyncSession = Depends(get_db_session),

@@ -6,8 +6,8 @@ from enum import Enum
 
 import jwt
 
-from src.auth.schemas import TokenData
-from src.config import (SECRET_KEY, ALGORITHM,
+from app.auth.schemas import TokenData
+from app.config import (SECRET_KEY, ALGORITHM,
                         ACCESS_TOKEN_EXPIRE_MINUTES,
                         REFRESH_TOKEN_EXPIRE_MINUTES)
 

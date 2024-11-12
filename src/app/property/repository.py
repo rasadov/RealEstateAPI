@@ -3,10 +3,10 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from src.base.repository import BaseRepository
-from src.staticfiles.manager import BaseStaticFilesManager
-from src.property.models import Property, PropertyLike
-from src.property import exceptions
+from app.base.repository import BaseRepository
+from app.staticfiles.manager import BaseStaticFilesManager
+from app.property.models import Property, PropertyLike
+from app.property import exceptions
 
 @dataclass
 class PropertyRepository(BaseRepository[Property]):

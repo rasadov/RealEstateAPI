@@ -2,10 +2,10 @@ from dataclasses import dataclass
 from typing import List, Dict, Any
 from fastapi import UploadFile
 
-from src.property.repository import PropertyRepository
-from src.user.repository import UserRepository
-from src.auth import exceptions
-from src.property.models import Property
+from app.property.repository import PropertyRepository
+from app.user.repository import UserRepository
+from app.auth import exceptions
+from app.property.models import Property
 
 @dataclass
 class PropertyService:
