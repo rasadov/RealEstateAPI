@@ -28,7 +28,7 @@ class PropertyService:
             "properties": properties,
             "total_pages": total_pages,
         }
-    
+
     async def create_property(self, payload: dict, images: List[UploadFile], user_id: int) -> Property:
         """Create property"""
         return await self.propertyRepository.create_property(payload, images, user_id)
@@ -71,3 +71,21 @@ class PropertyService:
             raise exceptions.Unauthorized
 
         return await self.propertyRepository.add_image_to_property(property_id, image)
+
+    async def like_property(self, property_id: int, user_id: int) -> Property:
+        """Like property"""
+        return await self.propertyRepository.like_property(property_id, user_id)
+    
+    async def unlike_property(self, property_id: int, user_id: int) -> None:
+        """Unlike property"""
+        return await self.propertyRepository.unlike_property(property_id, user_id)
+
+    async def delete_image_from_property(self, property_id: int, image_id: int, user_id: int) -> Property:
+        """Delete property image"""
+        user = await self.userRepository.get_or_401(user_id)
+        property = await self.propertyRepository.get_or_404(property_id)
+
+        if user.role != "admin" and property.owner_id != user_id:
+            raise exceptions.Unauthorized
+
+        return await self.propertyRepository.delete_image_from_property(property_id, image_id)
