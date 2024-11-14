@@ -17,11 +17,6 @@ class UserService:
         user = await self.userRepository.get_user_by(email=email)
         return user
 
-    async def check_username_or_email(self, string: str) -> bool:
-        """Check if username or email taken"""
-        user = await self.userRepository.get_user_by(username=string, email=string)
-        return user is None
-
     async def change_password(self, id: int, old_password: str, new_password: str) -> dict:
         """Change user password"""
         user = await self.userRepository.get_or_401(id)

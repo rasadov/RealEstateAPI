@@ -59,6 +59,7 @@ def generate_auth_tokens(user_id: int) -> dict:
     }
 
 def decode_token(token: str, credentials_exception) -> TokenData:
+    """Decode token"""
     try:
         payload: dict = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("user_id")
@@ -68,6 +69,7 @@ def decode_token(token: str, credentials_exception) -> TokenData:
         raise credentials_exception
 
 def verify_action_token(token: str, action: str, credentials_exception) -> int | None:
+    """Verify action token"""
     token_data = decode_token(token, credentials_exception)
     if token_data and token_data.user_id and token_data.sub == action:
         return token_data.user_id

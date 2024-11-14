@@ -23,6 +23,11 @@ class BaseStaticFilesManager(ABC):
         """Upload static file"""
         ...
 
+    @abstractmethod
+    def delete(self, file_path: str) -> None:
+        """Delete file"""
+        ...
+
     def _generate_unique_filename(self, filename: str) -> str:
         """Generate a unique filename"""
         name, ext = os.path.splitext(filename)

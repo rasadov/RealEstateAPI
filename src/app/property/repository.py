@@ -5,8 +5,9 @@ from sqlalchemy import select
 
 from app.base.repository import BaseRepository
 from app.staticfiles.manager import BaseStaticFilesManager
-from app.property.models import Property, PropertyLike
+from app.property.models import Property, PropertyLike, PropertyImage
 from app.property import exceptions
+from app.auth import exceptions as auth_exceptions
 
 @dataclass
 class PropertyRepository(BaseRepository[Property]):
@@ -47,11 +48,11 @@ class PropertyRepository(BaseRepository[Property]):
         result = await self.session.execute(select(PropertyLike).filter(PropertyLike.property_id == property_id))
         return result.scalars().all()
 
-    async def get_property_images(self, property_id: int) -> list[dict]:
+    async def get_property_images(self, property_id: int) -> list[PropertyImage]:
         """Get property images"""
         pass
 
-    async def get_property_image(self, property_id: int, image_id: int) -> dict:
+    async def get_property_image(self, image_id: int) -> dict:
         """Get property image"""
         pass
     
@@ -76,11 +77,26 @@ class PropertyRepository(BaseRepository[Property]):
 
     async def delete_image_from_property(self, property_id: int, image_id: int, user_id: int) -> Property:
         """Delete image from property"""
-        pass
+        image: PropertyImage = await self.get_property_image(image_id)
+        if image["property_id"] != property_id:
+            raise exceptions.PropertyNotFound
+        if image["user_id"] != user_id:
+            raise auth_exceptions.Unauthorized
+        await self.staticFilesManager.delete(image.path)
+        await self.delete(image_id)
+        await self.commit()
 
     async def delete_property(self, property_id: int) -> None:
-        """Delete property"""
-        self.delete(await self.get_or_404(property_id))
+        """Delete property
+        
+        TO DO: can be optimized by sending to celery task
+        """
+        property = await self.get_or_404(property_id)
+        images = await self.get_property_images(property_id)
+        for image in images:
+            await self.staticFilesManager.delete(image.path)
+            await self.delete(image)
+        await self.delete(property)
         await self.commit()
 
     async def unlike_property(self, property_id: int, user_id: int) -> None:

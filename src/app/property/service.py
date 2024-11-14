@@ -41,7 +41,7 @@ class PropertyService:
             raise exceptions.Unauthorized
 
         return await self.propertyRepository.approve_property(property_id)
-    
+
     async def delete_property(self, property_id: int, user_id: int) -> Property:
         """Delete property"""
         user = await self.userRepository.get_or_401(user_id)
@@ -75,7 +75,7 @@ class PropertyService:
     async def like_property(self, property_id: int, user_id: int) -> Property:
         """Like property"""
         return await self.propertyRepository.like_property(property_id, user_id)
-    
+
     async def unlike_property(self, property_id: int, user_id: int) -> None:
         """Unlike property"""
         return await self.propertyRepository.unlike_property(property_id, user_id)
