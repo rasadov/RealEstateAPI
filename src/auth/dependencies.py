@@ -5,7 +5,7 @@ from src.auth.service import AuthService
 from src.auth.exceptions import CredentialsException
 from src.user.dependencies import get_user_service
 from src.auth.schemas import TokenData
-from src.config import ALGORITHM, SECRET_KEY
+from src.config import Settings
 
 
 def get_auth_service(
@@ -21,7 +21,7 @@ def get_current_user(request: Request) -> TokenData:
         raise CredentialsException
 
     try:
-        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(access_token, Settings.SECRET_KEY, algorithms=[Settings.ALGORITHM])
         user_id = payload.get("user_id")
         if user_id is None:
             raise CredentialsException

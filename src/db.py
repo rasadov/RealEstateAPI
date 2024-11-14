@@ -1,7 +1,7 @@
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from src.config import DATABASE_URL
+from src.config import Settings
 
 # Global variables for engine and session, initialized later
 engine = None
@@ -14,7 +14,7 @@ async def initialize_database():
     This function should be called on application startup.
     """
     global engine, AsyncSessionLocal
-    engine = create_async_engine(DATABASE_URL, echo=True)
+    engine = create_async_engine(Settings.DATABASE_URL, echo=True)
 
     AsyncSessionLocal = sessionmaker(
         bind=engine,

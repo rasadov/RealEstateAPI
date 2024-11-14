@@ -1,9 +1,13 @@
-import os
-import uuid
-from abc import ABC, abstractmethod
-from fastapi import UploadFile
+import os, io, uuid
 from typing import Optional
+from abc import ABC, abstractmethod
+import boto3
+from botocore.exceptions import NoCredentialsError, ClientError
+from fastapi import UploadFile
+from PIL import Image
 
+import src.staticfiles.exceptions as exceptions
+from src.config import S3Settings
 
 class BaseStaticFilesManager(ABC):
     """Base static files service"""
@@ -65,15 +69,92 @@ class LocalStaticFilesManager(BaseStaticFilesManager):
         """Upload static file with similar behavior"""
         return self.upload(file)
 
-class S3StaticFilesManager(BaseStaticFilesManager):
-    """S3 static files service"""
-    AWS_BUCKET_NAME: str = "my-bucket"
-    AWS_REGION: str = "us-east-1"
-    AWS_ACCESS_KEY_ID: str
-    AWS_SECRET_ACCESS_KEY: str
+class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
+    """S3 static files service with file size, type limitations, and image processing"""
+    MAX_FILE_SIZE_MB: int = 5
+    MAX_IMAGE_SIZE_PX: tuple[int, int] = (1000, 1000)
+    ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png"}
 
-    def __init__(self, AWS_ACCESS_KEY_ID: str, AWS_SECRET_ACCESS_KEY: str):
-        self.AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID
-        self.AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY
+    def __init__(self):
+        super().__init__()
+        self.s3_client = boto3.client(
+            "s3",
+            region_name=self.AWS_REGION,
+            aws_access_key_id=self.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=self.AWS_SECRET_ACCESS_KEY,
+        )
 
-    # TO DO
+    def _validate_file(self, file: UploadFile) -> None:
+        """Validate file size and type"""
+        # Check file size
+        file.file.seek(0, 2)  # Move file pointer to end
+        file_size_mb = file.file.tell() / (1024 * 1024)
+        file.file.seek(0)  # Reset file pointer to start
+
+        if file_size_mb > self.MAX_FILE_SIZE_MB:
+            raise exceptions.FileTooLarge
+
+        if file.content_type not in self.ALLOWED_IMAGE_TYPES:
+            raise exceptions.UnsupportedFileType
+
+    def _process_image(self, file: UploadFile) -> UploadFile:
+        """Process image if needed (e.g., resize or convert format)"""
+        if file.content_type.startswith("image/"):
+            try:
+                image = Image.open(file.file)
+                image.thumbnail(self.MAX_IMAGE_SIZE_PX)
+
+                buffer = io.BytesIO()
+                image.save(buffer, format="WEBP", quality=85)
+                buffer.seek(0)
+
+                file = UploadFile(
+                    filename=file.filename.rsplit('.', 1)[0] + ".webp",
+                    file=buffer,
+                    content_type="image/webp"
+                )
+            except Exception:
+                raise exceptions.ImageProcessingError
+        return file
+
+    def get(self, file_path: str) -> Optional[bytes]:
+        """Get file from S3        
+        """
+        try:
+            response = self.s3_client.get_object(Bucket=self.AWS_BUCKET_NAME, Key=file_path)
+            return response["Body"].read()
+        except self.s3_client.exceptions.NoSuchKey:
+            return None
+        except Exception as e:
+            raise exceptions.FileUploadError(f"Error getting file from S3: {e}")
+
+    def upload(self, file: UploadFile) -> str:
+        """Upload file to S3, ensuring unique filenames and applying validation/processing
+        
+        returns: S3 URL of the uploaded file
+        """
+        self._validate_file(file)
+        file = self._process_image(file)
+
+        unique_filename = self._generate_unique_filename(file.filename)
+        file_path = f"uploads/{unique_filename}"
+        try:
+            self.s3_client.upload_fileobj(file.file, self.AWS_BUCKET_NAME, file_path)
+            return "https://%s.s3.%s.amazonaws.com/%s".format(
+                self.AWS_BUCKET_NAME, self.AWS_REGION, file_path
+            )
+        except Exception as e:
+            raise exceptions.FileUploadError(f"Error uploading file to S3: {e}")
+
+    def upload_static_file(self, file: UploadFile) -> str:
+        """Upload static file to S3 with similar behavior"""
+        return self.upload(file)
+
+    def delete(self, file_path: str) -> None:
+        """Delete file from S3"""
+        try:
+            self.s3_client.delete_object(Bucket=self.AWS_BUCKET_NAME, Key=file_path)
+            print(f"Deleted {file_path} from S3")
+        except ClientError as e:
+            print(f"Error deleting file from S3: {e}")
+            raise e

@@ -7,9 +7,7 @@ from enum import Enum
 import jwt
 
 from src.auth.schemas import TokenData
-from src.config import (SECRET_KEY, ALGORITHM,
-                        ACCESS_TOKEN_EXPIRE_MINUTES,
-                        REFRESH_TOKEN_EXPIRE_MINUTES)
+from src.config import Settings
 
 class AuthTokenTypes(str, Enum):
     """Enum class with authentication token types"""
@@ -25,7 +23,7 @@ def _create_auth_token(data: dict, expire_minutes: int) -> str:
     expire = datetime.now(tz=timezone.utc) + timedelta(minutes=expire_minutes)
     to_encode.update({"exp": expire})
 
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, Settings.SECRET_KEY, algorithm=Settings.ALGORITHM)
 
 def create_token(user_id: int, token_type: AuthTokenTypes, expire_minutes: int) -> str:
     """Create a token with the specified type and expiration"""
@@ -34,19 +32,19 @@ def create_token(user_id: int, token_type: AuthTokenTypes, expire_minutes: int) 
 
 def create_access_token(user_id: int) -> str:
     """Create access token"""
-    return create_token(user_id, AuthTokenTypes.ACCESS, ACCESS_TOKEN_EXPIRE_MINUTES)
+    return create_token(user_id, AuthTokenTypes.ACCESS, Settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
 def create_refresh_token(user_id: int) -> str:
     """Create refresh token"""
-    return create_token(user_id, AuthTokenTypes.REFRESH, REFRESH_TOKEN_EXPIRE_MINUTES)
+    return create_token(user_id, AuthTokenTypes.REFRESH, Settings.REFRESH_TOKEN_EXPIRE_MINUTES)
 
 def create_forgot_password_token(user_id: int) -> str:
     """Create forgot password token"""
-    return create_token(user_id, AuthTokenTypes.FORGOT_PASSWORD, ACCESS_TOKEN_EXPIRE_MINUTES)
+    return create_token(user_id, AuthTokenTypes.FORGOT_PASSWORD, Settings.FORGOT_PASSWORD_EXPIRE_MINUTES)
 
 def create_confirm_email_token(user_id: int) -> str:
     """Create confirm email token"""
-    return create_token(user_id, AuthTokenTypes.CONFIRM_EMAIL, ACCESS_TOKEN_EXPIRE_MINUTES)
+    return create_token(user_id, AuthTokenTypes.CONFIRM_EMAIL, Settings.CONFIRM_EMAIL_EXPIRE_MINUTES)
 
 def generate_auth_tokens(user_id: int) -> dict:
     """Generate access and refresh tokens"""
@@ -61,7 +59,7 @@ def generate_auth_tokens(user_id: int) -> dict:
 def decode_token(token: str, credentials_exception) -> TokenData:
     """Decode token"""
     try:
-        payload: dict = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload: dict = jwt.decode(token, Settings.SECRET_KEY, algorithms=[Settings.ALGORITHM])
         user_id: str = payload.get("user_id")
         token_data = TokenData(user_id=user_id)
         return token_data
