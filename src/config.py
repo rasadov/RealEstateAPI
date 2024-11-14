@@ -5,6 +5,12 @@ load_dotenv()
 
 class Settings:
     """Base configuration."""
+
+    # App
+    FRONTEND_URL = os.getenv("FRONTEND_URL")
+    BACKEND_URL = os.getenv("BACKEND_URL")
+
+    # Auth
     SECRET_KEY = os.getenv("SECRET_KEY")
     ALGORITHM = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES = 60
@@ -27,6 +33,13 @@ class Settings:
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
     GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
+
+    # SMTP
+    SMTP_SERVER = os.getenv("SMTP_SERVER")
+    SMTP_PORT = os.getenv("SMTP_PORT")
+    SMTP_USER = os.getenv("SMTP_USER")
+    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+    EMAIL_SENDER = os.getenv("EMAIL_SENDER")
 
 class S3Settings:
     """S3 configuration."""

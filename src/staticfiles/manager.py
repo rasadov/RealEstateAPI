@@ -118,8 +118,7 @@ class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
         return file
 
     def get(self, file_path: str) -> Optional[bytes]:
-        """Get file from S3        
-        """
+        """Get file from S3"""
         try:
             response = self.s3_client.get_object(Bucket=self.AWS_BUCKET_NAME, Key=file_path)
             return response["Body"].read()
