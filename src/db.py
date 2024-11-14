@@ -1,7 +1,7 @@
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from app.config import DATABASE_URL
+from src.config import DATABASE_URL
 
 # Global variables for engine and session, initialized later
 engine = None
@@ -30,14 +30,6 @@ async def get_db_session():
         finally:
             await session.close()
 
-async def initialize_redis():
-    """Initialize Redis connection."""
-    pass
-
 async def close_database():
     """Close database engine."""
     await engine.dispose()
-
-async def close_redis():
-    """Close Redis connection."""
-    pass

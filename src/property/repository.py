@@ -3,11 +3,12 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from app.base.repository import BaseRepository
-from app.staticfiles.manager import BaseStaticFilesManager
-from app.property.models import Property, PropertyLike, PropertyImage
-from app.property import exceptions
-from app.auth import exceptions as auth_exceptions
+from src.base.repository import BaseRepository
+from src.staticfiles.manager import BaseStaticFilesManager
+from src.property.models import Property, PropertyLike, PropertyImage, SoldProperty
+from src.property import exceptions
+from src.auth import exceptions as auth_exceptions
+from src.background_tasks.tasks import delete_property
 
 @dataclass
 class PropertyRepository(BaseRepository[Property]):
@@ -45,7 +46,9 @@ class PropertyRepository(BaseRepository[Property]):
     
     async def get_property_likes(self, property_id: int) -> list[dict]:
         """Get property likes"""
-        result = await self.session.execute(select(PropertyLike).filter(PropertyLike.property_id == property_id))
+        result = await self.session.execute(
+            select(PropertyLike).filter(PropertyLike.property_id == property_id)
+            )
         return result.scalars().all()
 
     async def get_property_images(self, property_id: int) -> list[PropertyImage]:
@@ -86,18 +89,23 @@ class PropertyRepository(BaseRepository[Property]):
         await self.delete(image_id)
         await self.commit()
 
-    async def delete_property(self, property_id: int) -> None:
-        """Delete property
-        
-        TO DO: can be optimized by sending to celery task
-        """
+    async def delete_property(self, property_id: int, sold: bool) -> None:
+        """Delete property"""
         property = await self.get_or_404(property_id)
-        images = await self.get_property_images(property_id)
-        for image in images:
-            await self.staticFilesManager.delete(image.path)
-            await self.delete(image)
-        await self.delete(property)
+
+        if sold:
+            sold_property = SoldProperty(
+                property_id=property.id,
+                price=property.price,
+                district=property.district,
+                longitude=property.longitude,
+                latitude=property.latitude,
+            )
+            self.add(sold_property)        
+        property.is_active = False
         await self.commit()
+
+        delete_property.delay(property_id)
 
     async def unlike_property(self, property_id: int, user_id: int) -> None:
         """Unlike property"""

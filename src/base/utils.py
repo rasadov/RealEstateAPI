@@ -1,4 +1,4 @@
-"""Module contains utility functions for the base app."""
+"""Module contains utility functions for the base src."""
 
 import smtplib
 

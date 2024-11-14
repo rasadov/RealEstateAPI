@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, UploadFile
 
-from app.property.service import PropertyService
-from app.property.dependencies import get_property_service
-from app.auth.dependencies import get_current_user
-from app.auth.schemas import TokenData
+from src.property.service import PropertyService
+from src.property.dependencies import get_property_service
+from src.auth.dependencies import get_current_user
+from src.auth.schemas import TokenData
 
 router = APIRouter(
     prefix="/api/v1/property",

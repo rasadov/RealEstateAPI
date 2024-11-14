@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, Integer, Float, String, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.base.models import CreateTimestampMixin, CustomBase
-from app.user.models import User
+from src.base.models import CreateTimestampMixin, CustomBase
+from src.user.models import User
 
 if TYPE_CHECKING:
-    from app.user.models import User
+    from src.user.models import User
 
 
 class Property(CreateTimestampMixin):
@@ -18,6 +18,7 @@ class Property(CreateTimestampMixin):
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
     price: Mapped[float] = mapped_column(Float, nullable=False)
+    district: Mapped[str] = mapped_column(String, nullable=False)
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
     approved: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -39,6 +40,12 @@ class SoldProperty(CreateTimestampMixin):
     __tablename__ = "SoldPropertyModel"
 
     property_id: Mapped[int] = mapped_column(Integer, ForeignKey("PropertyModel.id"), nullable=False)
+    price: Mapped[float] = mapped_column(Float, nullable=False)
+    district: Mapped[str] = mapped_column(String, nullable=False)
+    longitude: Mapped[float] = mapped_column(Float, nullable=False)
+    latitude: Mapped[float] = mapped_column(Float, nullable=False)
+
+    property: Mapped["Property"] = relationship("Property")
 
 class PropertyImage(CustomBase):
     """Property image model."""

@@ -1,11 +1,11 @@
 from fastapi import Depends, Request
 import jwt
 
-from app.auth.service import AuthService
-from app.auth.exceptions import CredentialsException
-from app.user.dependencies import get_user_service
-from app.auth.schemas import TokenData
-from app.config import ALGORITHM, SECRET_KEY
+from src.auth.service import AuthService
+from src.auth.exceptions import CredentialsException
+from src.user.dependencies import get_user_service
+from src.auth.schemas import TokenData
+from src.config import ALGORITHM, SECRET_KEY
 
 
 def get_auth_service(

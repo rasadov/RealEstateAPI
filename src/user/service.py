@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 
-from app.base.utils import send_email
-from app.auth import exceptions
-from app.user.repository import UserRepository
-from app.user.models import User
-from app.auth import oauth2
+from src.base.utils import send_email
+from src.auth import exceptions
+from src.user.repository import UserRepository
+from src.user.models import User
+from src.auth import oauth2
 
 @dataclass
 class UserService:

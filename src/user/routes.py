@@ -1,10 +1,10 @@
 """User routes module."""
 from fastapi import Depends, APIRouter
 
-from app.user.service import UserService
-from app.user.dependencies import get_user_service
-from app.auth.dependencies import get_current_user
-from app.auth.schemas import TokenData
+from src.user.service import UserService
+from src.user.dependencies import get_user_service
+from src.auth.dependencies import get_current_user
+from src.auth.schemas import TokenData
 
 router = APIRouter(
     prefix="/api/v1/user",

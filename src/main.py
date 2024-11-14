@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from app.auth.routes import router as auth_router
-from app.user.routes import router as user_router
-from app.db import initialize_database, close_database
+from src.auth.routes import router as auth_router
+from src.user.routes import router as user_router
+from src.db import initialize_database, close_database
 
 
 app = FastAPI(

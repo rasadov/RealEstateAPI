@@ -2,11 +2,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.base.models import CreateTimestampMixin, CustomBase
-from app.auth import utils
+from src.base.models import CreateTimestampMixin, CustomBase
+from src.auth import utils
 
 if TYPE_CHECKING:
-    from app.property.models import Property, PropertyLike
+    from src.property.models import Property, PropertyLike
 
 class User(CreateTimestampMixin):
     """User model."""

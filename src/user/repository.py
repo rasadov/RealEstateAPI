@@ -3,10 +3,10 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from app.base.repository import BaseRepository
-from app.staticfiles.manager import BaseStaticFilesManager
-from app.user.models import User
-from app.auth import exceptions
+from src.base.repository import BaseRepository
+from src.staticfiles.manager import BaseStaticFilesManager
+from src.user.models import User
+from src.auth import exceptions
 
 
 @dataclass
