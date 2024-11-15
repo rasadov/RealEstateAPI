@@ -22,10 +22,9 @@ async def register(
 @router.post("/login")
 async def login(
     user: dict,
-    response: Response,
     auth_service: AuthService = Depends(get_auth_service),
     ):
-    return await auth_service.login(user, response)
+    return await auth_service.login(user.get("email"), user.get("password"))
 
 @router.post('/logout')
 async def logout(

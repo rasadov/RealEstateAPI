@@ -14,7 +14,9 @@ def get_auth_service(
     """Dependency injector for auth service"""
     return AuthService(user_service)
 
-def get_current_user(request: Request) -> TokenData:
+def get_current_user(
+        request: Request
+) -> TokenData:
     access_token = request.cookies.get("access_token")
 
     if not access_token:

@@ -42,7 +42,7 @@ class PropertyService:
 
         return await self.propertyRepository.approve_property(property_id)
 
-    async def delete_property(self, property_id: int, user_id: int) -> Property:
+    async def delete_property(self, property_id: int, user_id: int, sold: bool) -> Property:
         """Delete property"""
         user = await self.userRepository.get_or_401(user_id)
         property = await self.propertyRepository.get_or_404(property_id)
@@ -50,7 +50,7 @@ class PropertyService:
         if user.role != "admin" and property.owner_id != user_id:
             raise exceptions.Unauthorized
 
-        return await self.propertyRepository.delete_property(property_id)
+        return await self.propertyRepository.delete_property(property_id, sold)
 
     async def update_property(self, property_id: int, payload: dict, user_id: int) -> Property:
         """Update property"""

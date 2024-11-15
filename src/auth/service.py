@@ -6,7 +6,7 @@ from httpx import AsyncClient
 from src.auth.utils import hash_password
 from src.auth import exceptions
 from src.auth import oauth2
-from src.user.models import User
+from src.user.models import User, Agent
 from src.user.service import UserService
 from src.config import Settings
 
@@ -17,14 +17,14 @@ class AuthService:
     userService: UserService
 
     @staticmethod
-    async def _parse_token(request: Request, tokenType: str) -> dict:
+    async def _parse_token(request: Request, tokenType: str) -> int:
         """Parse token from request"""
         token = request.cookies.get("access_token")
         if not token:
             raise exceptions.TokenNotFound
         return oauth2.verify_action_token(token, tokenType, exceptions.CredentialsException)
 
-    async def authenticate(self, email: str) -> dict:
+    async def authenticate(self, email: str) -> JSONResponse:
         """Authenticate user"""
 
         user = await self.userService.get_user_by_email(email)
@@ -41,7 +41,7 @@ class AuthService:
 
         return response
 
-    async def login(self, email: str, password: str) -> dict:
+    async def login(self, email: str, password: str) -> JSONResponse:
         """Login user"""
         user = await self.userService.get_user_by_email(email)
 
@@ -50,7 +50,7 @@ class AuthService:
 
         return await self.authenticate(user.email)
 
-    async def register(self, payload : dict) -> dict:
+    async def register(self, payload : dict) -> JSONResponse:
         """Register user"""
         user_exists = await self.userService.userRepository.get_user_by(email=payload.get("email"))
         if user_exists:
@@ -58,15 +58,24 @@ class AuthService:
 
         new_user = User(
             email=payload.get("email"),
-            password_hash=hash_password(payload.get("password")),
+            password_hash=hash_password(payload.get("password"))
         )
         await self.userService.userRepository.add(new_user)
         await self.userService.userRepository.commit()
         await self.userService.userRepository.refresh(new_user)
+        if payload.get("role") == "agent":
+            self._register_agent(new_user.id, payload.get("serial_number"))
 
         return await self.authenticate(new_user.email)
+    
+    async def _register_agent(self, user_id: int, serial_number: str) -> None:
+        """Register agent"""
+        agent = Agent(user_id, serial_number)
+        await self.userService.userRepository.add(agent)
+        await self.userService.userRepository.commit()
 
-    async def refresh_tokens(self, request: Request) -> dict:
+
+    async def refresh_tokens(self, request: Request) -> JSONResponse:
         """Refresh token"""
         user_id = await self._parse_token(request, "refresh_token")
         user = self.userService.userRepository.get_or_401(user_id)
@@ -84,7 +93,7 @@ class AuthService:
         response.delete_cookie("access_token")
         return {"message": "Logged out successfully"}
 
-    async def auth_google(self, code: str) -> dict:
+    async def auth_google(self, code: str) -> JSONResponse:
         """Authenticate user with Google"""
         token_url = "https://accounts.google.com/o/oauth2/token"
         data = {

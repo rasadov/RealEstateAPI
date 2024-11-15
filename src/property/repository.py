@@ -9,7 +9,6 @@ from src.base.repository import BaseRepository
 from src.staticfiles.manager import BaseStaticFilesManager
 from src.property.models import Property, PropertyLike, PropertyImage, SoldProperty
 from src.property import exceptions
-from src.auth import exceptions as auth_exceptions
 from src.background_tasks.tasks import delete_property
 
 @dataclass
@@ -30,7 +29,12 @@ class PropertyRepository(BaseRepository[Property]):
 
     async def get_or_404(self, property_id: int) -> Property:
         """Get property by id or raise 404"""
-        result = await self.session.execute(select(Property).filter(Property.id == property_id))
+        result = await self.session.execute(
+            select(Property).filter(
+                Property.id == property_id,
+                Property.is_active == True
+                )
+            )
         property_obj = result.scalars().first()
         if not property_obj:
             raise exceptions.PropertyNotFound
@@ -38,7 +42,12 @@ class PropertyRepository(BaseRepository[Property]):
 
     async def get_properties_page(self, limit: int, offset: int) -> list[Property]:
         """Get properties page"""
-        result = await self.session.execute(select(Property).limit(limit).offset(offset))
+        result = await self.session.execute(
+            select(Property).
+            filter(Property.is_active == True).
+            order_by(Property.created_at.desc()).
+            limit(limit).offset(offset)
+        )
         return result.scalars().all()
 
     async def get_properties_count(self) -> int:
@@ -46,17 +55,10 @@ class PropertyRepository(BaseRepository[Property]):
         result = await self.session.execute(select(Property).count())
         return result.scalar()
 
-    async def get_property_likes(self, property_id: int) -> list[dict]:
+    async def get_property_likes(self, property_id: int) -> list[PropertyLike]:
         """Get property likes"""
         result = await self.session.execute(
             select(PropertyLike).filter(PropertyLike.property_id == property_id)
-            )
-        return result.scalars().all()
-
-    async def get_property_images(self, property_id: int) -> list[PropertyImage]:
-        """Get property images"""
-        result = await self.session.execute(
-            select(PropertyImage).filter(PropertyImage.property_id == property_id)
             )
         return result.scalars().all()
 
@@ -126,7 +128,7 @@ class PropertyRepository(BaseRepository[Property]):
                 latitude=property.latitude,
             )
             self.add(sold_property)        
-        property.is_active = False
+        property.deactivate()
         await self.commit()
 
         delete_property.delay(property_id)

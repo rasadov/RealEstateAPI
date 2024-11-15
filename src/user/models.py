@@ -50,6 +50,11 @@ class Agent(CustomBase):
 
     user: Mapped["User"] = relationship("User")
 
+    def __init__(self, user_id: int, serial_number: str) -> None:
+        """Initialize agent"""
+        self.user_id = user_id
+        self.serial_number = serial_number
+
 class Approval(CustomBase):
     """Approval model."""
 

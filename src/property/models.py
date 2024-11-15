@@ -30,8 +30,11 @@ class Property(CreateTimestampMixin):
     images: Mapped[list["PropertyImage"]] = relationship("PropertyImage", back_populates="property")
     likes: Mapped[list["PropertyLike"]] = relationship("PropertyLike", back_populates="property")
 
-    def approve(self):
+    def approve(self) -> None:
         self.approved = True
+    
+    def deactivate(self) -> None:
+        self.is_active = False
 
 class SoldProperty(CreateTimestampMixin):
     """Sold property model."""
