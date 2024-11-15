@@ -7,3 +7,7 @@ class PropertyNotFound(HTTPException):
 class PropertyLikeNotFound(HTTPException):
     def __init__(self):
         super().__init__(status_code=404, detail="Property like not found")
+
+class PropertyImageNotFound(HTTPException):
+    def __init__(self):
+        super().__init__(status_code=404, detail="Property image not found")

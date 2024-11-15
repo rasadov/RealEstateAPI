@@ -22,11 +22,6 @@ class BaseStaticFilesManager(ABC):
         ...
 
     @abstractmethod
-    def upload_static_file(self, file: UploadFile) -> str:
-        """Upload static file"""
-        ...
-
-    @abstractmethod
     def delete(self, file_path: str) -> None:
         """Delete file"""
         ...
@@ -63,10 +58,6 @@ class LocalStaticFilesManager(BaseStaticFilesManager):
         except Exception as e:
             print(f"Error uploading file: {e}")
             raise e
-
-    def upload_static_file(self, file: UploadFile) -> str:
-        """Upload static file with similar behavior"""
-        return self.upload(file)
 
 class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
     """S3 static files service with file size, type limitations, and image processing"""
@@ -143,10 +134,6 @@ class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
             )
         except Exception as e:
             raise exceptions.FileUploadError(f"Error uploading file to S3: {e}")
-
-    def upload_static_file(self, file: UploadFile) -> str:
-        """Upload static file to S3 with similar behavior"""
-        return self.upload(file)
 
     def delete(self, file_path: str) -> None:
         """Delete file from S3"""

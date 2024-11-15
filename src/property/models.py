@@ -46,7 +46,7 @@ class SoldProperty(CreateTimestampMixin):
 
     property: Mapped["Property"] = relationship("Property")
 
-class PropertyImage(CustomBase):
+class PropertyImage(CreateTimestampMixin):
     """Property image model."""
 
     __tablename__ = "PropertyImageModel"

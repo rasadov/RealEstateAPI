@@ -32,7 +32,7 @@ class PropertyService:
     async def create_property(self, payload: dict, images: List[UploadFile], user_id: int) -> Property:
         """Create property"""
         return await self.propertyRepository.create_property(payload, images, user_id)
-    
+
     async def approve_property(self, property_id: int, user_id: int) -> Property:
         """Approve property"""
         user = await self.userRepository.get_or_401(user_id)

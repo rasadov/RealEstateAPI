@@ -1,7 +1,9 @@
 """Module with property repository"""
 from dataclasses import dataclass
+from typing import Any
 
 from sqlalchemy import select
+from fastapi import UploadFile
 
 from src.base.repository import BaseRepository
 from src.staticfiles.manager import BaseStaticFilesManager
@@ -20,7 +22,7 @@ class PropertyRepository(BaseRepository[Property]):
         """Get property by any field"""
         result = await self.session.execute(select(Property).filter_by(**kwargs))
         return result.scalars().first()
-    
+
     async def get_like_by(self, **kwargs) -> PropertyLike:
         """Get like by any field"""
         result = await self.session.execute(select(PropertyLike).filter_by(**kwargs))
@@ -43,7 +45,7 @@ class PropertyRepository(BaseRepository[Property]):
         """Get properties count"""
         result = await self.session.execute(select(Property).count())
         return result.scalar()
-    
+
     async def get_property_likes(self, property_id: int) -> list[dict]:
         """Get property likes"""
         result = await self.session.execute(
@@ -53,23 +55,49 @@ class PropertyRepository(BaseRepository[Property]):
 
     async def get_property_images(self, property_id: int) -> list[PropertyImage]:
         """Get property images"""
-        pass
+        result = await self.session.execute(
+            select(PropertyImage).filter(PropertyImage.property_id == property_id)
+            )
+        return result.scalars().all()
 
-    async def get_property_image(self, image_id: int) -> dict:
-        """Get property image"""
-        pass
-    
-    async def create_property(self, payload: dict, images: list[dict], user_id: int) -> Property:
+    async def _get_property_image(self, image_id: int) -> PropertyImage:
+        """Get property image by id"""
+        result = await self.session.execute(
+            select(PropertyImage).filter(PropertyImage.id == image_id)
+            )
+        image = result.scalars().first()
+        if not image:
+            raise exceptions.PropertyImageNotFound
+        return image
+
+    async def create_property(self, payload: dict, images: list[UploadFile], user_id: int) -> Property:
         """Create property"""
-        pass
+        property_obj = Property(**payload, owner_id=user_id)
+        self.add(property_obj)
+        await self.commit()
+        for image in images:
+            self.staticFilesManager.upload(image)
+            property_image = PropertyImage(property_id=property_obj.id, **image)
+            self.add(property_image)
+        await self.commit()
+        return property_obj
 
-    async def add_image_to_property(self, property_id: int, image: dict, user_id: int) -> Property:
+    async def add_image_to_property(self, property_id: int, image: UploadFile) -> Property:
         """Add image to property"""
-        pass
+        property_obj = await self.get_or_404(property_id)
+        path = self.staticFilesManager.upload(image)
+        property_image = PropertyImage(property_id=property_id, path=path)
+        self.add(property_image)
+        await self.commit()
+        return property_obj
 
-    async def update_property(self, property_id: int, payload: dict, user_id: int) -> Property:
+    async def update_property(self, property_id: int, payload: dict) -> Property:
         """Update property"""
-        pass
+        property_obj = await self.get_or_404(property_id)
+        for key, value in payload.items():
+            setattr(property_obj, key, value)
+        await self.commit()
+        return property_obj
 
     async def like_property(self, property_id: int, user_id: int) -> Property:
         """Like property"""
@@ -78,13 +106,9 @@ class PropertyRepository(BaseRepository[Property]):
         await self.commit()
         return await self.get_or_404(property_id)
 
-    async def delete_image_from_property(self, property_id: int, image_id: int, user_id: int) -> Property:
+    async def delete_image_from_property(self, image_id: int) -> Property:
         """Delete image from property"""
-        image: PropertyImage = await self.get_property_image(image_id)
-        if image["property_id"] != property_id:
-            raise exceptions.PropertyNotFound
-        if image["user_id"] != user_id:
-            raise auth_exceptions.Unauthorized
+        image: PropertyImage = await self._get_property_image(image_id)
         await self.staticFilesManager.delete(image.path)
         await self.delete(image_id)
         await self.commit()
