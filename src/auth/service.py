@@ -8,7 +8,7 @@ from src.auth import exceptions
 from src.auth import oauth2
 from src.user.models import User
 from src.user.service import UserService
-from src.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
+from src.config import Settings
 
 @dataclass
 class AuthService:
@@ -89,9 +89,9 @@ class AuthService:
         token_url = "https://accounts.google.com/o/oauth2/token"
         data = {
             "code": code,
-            "client_id": GOOGLE_CLIENT_ID,
-            "client_secret": GOOGLE_CLIENT_SECRET,
-            "redirect_uri": GOOGLE_REDIRECT_URI,
+            "client_id": Settings.GOOGLE_CLIENT_ID,
+            "client_secret": Settings.GOOGLE_CLIENT_SECRET,
+            "redirect_uri": Settings.GOOGLE_REDIRECT_URI,
             "grant_type": "authorization_code",
         }
         async with AsyncClient() as client:

@@ -2,7 +2,6 @@ import os, io, uuid
 from typing import Optional
 from abc import ABC, abstractmethod
 import boto3
-from botocore.exceptions import NoCredentialsError, ClientError
 from fastapi import UploadFile
 from PIL import Image
 
@@ -154,6 +153,5 @@ class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
         try:
             self.s3_client.delete_object(Bucket=self.AWS_BUCKET_NAME, Key=file_path)
             print(f"Deleted {file_path} from S3")
-        except ClientError as e:
-            print(f"Error deleting file from S3: {e}")
-            raise e
+        except Exception as e:
+            raise exceptions.FileDeleteError(f"Error deleting file from S3: {e}")

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Response
 
 from src.auth.service import AuthService
 from src.auth.dependencies import get_auth_service
-from src.config import GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI
+from src.config import Settings
 
 router = APIRouter(
     prefix="/api/v1/auth",
@@ -39,8 +39,8 @@ async def login_google():
     return {
         "url": (
             f"https://accounts.google.com/o/oauth2/auth?"
-            f"response_type=code&client_id={GOOGLE_CLIENT_ID}&"
-            f"redirect_uri={GOOGLE_REDIRECT_URI}&"
+            f"response_type=code&client_id={Settings.GOOGLE_CLIENT_ID}&"
+            f"redirect_uri={Settings.GOOGLE_REDIRECT_URI}&"
             f"scope=openid%20profile%20email&"
             f"access_type=offline"
         )

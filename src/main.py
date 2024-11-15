@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from src.auth.routes import router as auth_router
 from src.user.routes import router as user_router
+from src.property.routes import router as property_router
 from src.db import initialize_database, close_database
 
 
@@ -33,3 +34,4 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(property_router)
