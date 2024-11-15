@@ -14,7 +14,7 @@ from src.config import Settings
 class AuthService:
     """Auth service"""
 
-    userService: UserService
+    user_service: UserService
 
     @staticmethod
     async def _parse_token(request: Request, tokenType: str) -> int:
@@ -27,7 +27,7 @@ class AuthService:
     async def authenticate(self, email: str) -> JSONResponse:
         """Authenticate user"""
 
-        user = await self.userService.get_user_by_email(email)
+        user = await self.user_service.get_user_by_email(email)
         tokens = oauth2.generate_auth_tokens(user.id)
 
         response = JSONResponse(content={
@@ -43,7 +43,7 @@ class AuthService:
 
     async def login(self, email: str, password: str) -> JSONResponse:
         """Login user"""
-        user = await self.userService.get_user_by_email(email)
+        user = await self.user_service.get_user_by_email(email)
 
         if user is None or not user.verify_password(password):
             raise exceptions.InvalidCredentials
@@ -52,7 +52,7 @@ class AuthService:
 
     async def register(self, payload : dict) -> JSONResponse:
         """Register user"""
-        user_exists = await self.userService.userRepository.get_user_by(email=payload.get("email"))
+        user_exists = await self.user_service.userRepository.get_user_by(email=payload.get("email"))
         if user_exists:
             raise exceptions.EmailAlreadyTaken
 
@@ -60,9 +60,9 @@ class AuthService:
             email=payload.get("email"),
             password_hash=hash_password(payload.get("password"))
         )
-        await self.userService.userRepository.add(new_user)
-        await self.userService.userRepository.commit()
-        await self.userService.userRepository.refresh(new_user)
+        await self.user_service.userRepository.add(new_user)
+        await self.user_service.userRepository.commit()
+        await self.user_service.userRepository.refresh(new_user)
         if payload.get("role") == "agent":
             self._register_agent(new_user.id, payload.get("serial_number"))
 
@@ -71,14 +71,14 @@ class AuthService:
     async def _register_agent(self, user_id: int, serial_number: str) -> None:
         """Register agent"""
         agent = Agent(user_id, serial_number)
-        await self.userService.userRepository.add(agent)
-        await self.userService.userRepository.commit()
+        await self.user_service.userRepository.add(agent)
+        await self.user_service.userRepository.commit()
 
 
     async def refresh_tokens(self, request: Request) -> JSONResponse:
         """Refresh token"""
         user_id = await self._parse_token(request, "refresh_token")
-        user = self.userService.userRepository.get_or_401(user_id)
+        user = self.user_service.userRepository.get_or_401(user_id)
         tokens = oauth2.generate_auth_tokens(user.id)
 
         response = JSONResponse(content={"message": "Token refreshed"})
@@ -113,7 +113,7 @@ class AuthService:
             raise exceptions.FailedToGetUserInfo
 
         user_info = user_info_response.json()
-        user = await self.userService.get_user_by_email(user_info.get("email"))
+        user = await self.user_service.get_user_by_email(user_info.get("email"))
 
         if user:
             return await self.authenticate(user.email)

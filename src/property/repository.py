@@ -1,8 +1,9 @@
 """Module with property repository"""
 from dataclasses import dataclass
-from typing import Any
+from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import func
+from sqlalchemy.future import select
 from fastapi import UploadFile
 
 from src.base.repository import BaseRepository
@@ -40,7 +41,7 @@ class PropertyRepository(BaseRepository[Property]):
             raise exceptions.PropertyNotFound
         return property_obj
 
-    async def get_properties_page(self, limit: int, offset: int) -> list[Property]:
+    async def get_properties_page(self, limit: int, offset: int) -> Sequence[Property]:
         """Get properties page"""
         result = await self.session.execute(
             select(Property).
@@ -52,7 +53,7 @@ class PropertyRepository(BaseRepository[Property]):
 
     async def get_properties_count(self) -> int:
         """Get properties count"""
-        result = await self.session.execute(select(Property).count())
+        result = await self.session.execute(select(func.count(Property.id)))
         return result.scalar()
 
     async def get_property_likes(self, property_id: int) -> list[PropertyLike]:
@@ -78,8 +79,8 @@ class PropertyRepository(BaseRepository[Property]):
         self.add(property_obj)
         await self.commit()
         for image in images:
-            self.staticFilesManager.upload(image)
-            property_image = PropertyImage(property_id=property_obj.id, **image)
+            path = self.staticFilesManager.upload(image)
+            property_image = PropertyImage(property_id=property_obj.id, path=path)
             self.add(property_image)
         await self.commit()
         return property_obj
@@ -93,14 +94,6 @@ class PropertyRepository(BaseRepository[Property]):
         await self.commit()
         return property_obj
 
-    async def update_property(self, property_id: int, payload: dict) -> Property:
-        """Update property"""
-        property_obj = await self.get_or_404(property_id)
-        for key, value in payload.items():
-            setattr(property_obj, key, value)
-        await self.commit()
-        return property_obj
-
     async def like_property(self, property_id: int, user_id: int) -> Property:
         """Like property"""
         like = PropertyLike(property_id=property_id, user_id=user_id)
@@ -108,7 +101,22 @@ class PropertyRepository(BaseRepository[Property]):
         await self.commit()
         return await self.get_or_404(property_id)
 
-    async def delete_image_from_property(self, image_id: int) -> Property:
+    async def update_property(self, property_id: int, payload: dict) -> Property:
+        """Update property"""
+        property_obj = await self.get_or_404(property_id)
+        for key, value in payload.items():
+            setattr(property_obj, key, value)
+        await self.commit()
+        return property_obj
+    
+    async def approve_property(self, property_id: int) -> Property:
+        """Approve property"""
+        property_obj: Property = await self.get_or_404(property_id)
+        property_obj.approve()
+        await self.session.commit()
+        return property_obj
+
+    async def delete_image_from_property(self, image_id: int) -> None:
         """Delete image from property"""
         image: PropertyImage = await self._get_property_image(image_id)
         await self.staticFilesManager.delete(image.path)
@@ -138,10 +146,3 @@ class PropertyRepository(BaseRepository[Property]):
         like = self.get_like_by(property_id=property_id, user_id=user_id)
         self.delete(like)
         await self.commit()
-
-    async def approve_property(self, property_id: int) -> Property:
-        """Approve property"""
-        property_obj: Property = await self.get_or_404(property_id)
-        property_obj.approve()
-        await self.session.commit()
-        return property_obj

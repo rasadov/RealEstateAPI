@@ -8,6 +8,18 @@ from src.user.models import User
 if TYPE_CHECKING:
     from src.user.models import User
 
+class Listing(CustomBase):
+    """Listing model."""
+
+    __tablename__ = "ListingModel"
+
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("UserModel.id"), nullable=False)
+
+    properties: Mapped[list["Property"]] = relationship("Property")
+    user: Mapped["User"] = relationship("User")
 
 class Property(CreateTimestampMixin):
     """Property model."""
@@ -20,13 +32,13 @@ class Property(CreateTimestampMixin):
     district: Mapped[str] = mapped_column(String, nullable=False)
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
+    area: Mapped[float] = mapped_column(Float, nullable=False)
+    listing_id: Mapped[int] = mapped_column(Integer, ForeignKey("ListingModel.id"), nullable=True)
     approved: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     owner_id: Mapped[int] = mapped_column(Integer, ForeignKey("UserModel.id"), nullable=False)
-    main_image_id: Mapped[int] = mapped_column(Integer, ForeignKey("PropertyImageModel.id"), nullable=True)
 
     owner: Mapped["User"] = relationship("User", back_populates="properties")
-    main_image: Mapped["PropertyImage"] = relationship("PropertyImage", foreign_keys=[main_image_id])
     images: Mapped[list["PropertyImage"]] = relationship("PropertyImage", back_populates="property")
     likes: Mapped[list["PropertyLike"]] = relationship("PropertyLike", back_populates="property")
 
@@ -56,7 +68,6 @@ class PropertyImage(CreateTimestampMixin):
 
     property_id: Mapped[int] = mapped_column(Integer, ForeignKey("PropertyModel.id"), nullable=False)
     path: Mapped[str] = mapped_column(String, nullable=False)
-    is_main: Mapped[bool] = mapped_column(Boolean, default=False)
 
     property: Mapped["Property"] = mapped_column("Property", back_populates="images")
 

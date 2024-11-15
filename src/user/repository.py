@@ -1,7 +1,9 @@
 """Module with user repository"""
 from dataclasses import dataclass
+from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import func
+from sqlalchemy.future import select
 
 from src.base.repository import BaseRepository
 from src.staticfiles.manager import BaseStaticFilesManager
@@ -36,12 +38,12 @@ class UserRepository(BaseRepository[User]):
             raise exceptions.Unauthorized
         return user
 
-    async def get_users_page(self, limit: int, offset: int) -> list[User]:
+    async def get_users_page(self, limit: int, offset: int) -> Sequence[User]:
         """Get users page"""
         result = await self.session.execute(select(User).limit(limit).offset(offset))
         return result.scalars().all()
 
     async def get_users_count(self) -> int:
         """Get users count"""
-        result = await self.session.execute(select(User).count())
+        result = await self.session.execute(select(func.count(User.id)))
         return result.scalar()
