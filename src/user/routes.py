@@ -11,7 +11,7 @@ router = APIRouter(
     tags=["User"]
 )
 
-@router.post("/change-password")
+@router.patch("/change-password")
 async def change_password(payload: dict, user: TokenData = Depends(get_current_user),
                           user_service: UserService = Depends(get_user_service)):
     return await user_service.change_password(user.user_id, payload.get("old_password"), payload.get("new_password"))
@@ -23,7 +23,7 @@ async def forgot_password(
     ):
     return await user_service.forgot_password(payload.get("email"))
 
-@router.post("/reset-password")
+@router.patch("/reset-password")
 async def reset_password(
     payload: dict,
     token: str,
@@ -38,7 +38,7 @@ async def get_confirm_email_token(
     ):
     return await user_service.send_confirm_email(payload.get("email"))
 
-@router.post("/confirm-email")
+@router.patch("/confirm-email")
 async def confirm_email(
     payload: dict,
     token: str,

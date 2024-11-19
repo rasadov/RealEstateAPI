@@ -8,7 +8,7 @@ from fastapi import UploadFile
 
 from src.base.repository import BaseRepository
 from src.staticfiles.manager import BaseStaticFilesManager
-from src.property.models import Property, PropertyImage
+from src.property.models import Property, PropertyImage, Location
 from src.user.models import Approval
 from src.property import exceptions
 from src.background_tasks.tasks import delete_property_images
@@ -18,6 +18,14 @@ class PropertyRepository(BaseRepository[Property]):
     """Property repository"""
 
     staticFilesManager: BaseStaticFilesManager
+
+    async def get_map_locations(self) -> Sequence[Location]:
+        """Get map locations"""
+        result = await self.session.execute(
+            select(Location).
+            filter(Location.is_active == True)
+        )
+        return result.scalars().all()
 
     async def get_property_by(self, **kwargs) -> Property:
         """Get property by any field"""

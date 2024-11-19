@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import Dict, Any
 
 from fastapi import UploadFile
 
 from src.property.repository import PropertyRepository
 from src.user.repository import UserRepository
 from src.auth import exceptions
-from src.property.models import Property
+from src.property.models import Property, Location, PropertyInfo, PropertyImage
 
 @dataclass
 class PropertyService:
@@ -22,15 +22,19 @@ class PropertyService:
     async def get_properties_page(self, page: int, elements: int) -> Dict[str, Any]:
         """Get properties page"""
         offset = (page - 1) * elements
-        properties: List[Property] = await self.propertyRepository.get_properties_page(elements, offset)
+        properties: list[Property] = await self.propertyRepository.get_properties_page(elements, offset)
         count: int = await self.propertyRepository.get_properties_count()
         total_pages: int = (count - 1) // elements + 1
         return {
             "properties": properties,
             "total_pages": total_pages,
         }
+    
+    async def get_map_locations(self) -> list[Location]:
+        """Get map locations"""
+        return await self.propertyRepository.get_map_locations()
 
-    async def create_property(self, payload: dict, images: List[UploadFile], user_id: int) -> Property:
+    async def create_property(self, payload: dict, images: list[UploadFile], user_id: int) -> Property:
         """Create property"""
         return await self.propertyRepository.create_property(payload, images, user_id)
 
@@ -45,7 +49,7 @@ class PropertyService:
 
     async def delete_property(self, property_id: int, user_id: int, sold: bool) -> Property:
         """Delete property"""
-        user = await self.userRepository.get_or_401(user_id)
+        await self.userRepository.get_or_401(user_id)
         property = await self.propertyRepository.get_or_404(property_id)
 
         if property.owner_id != user_id:

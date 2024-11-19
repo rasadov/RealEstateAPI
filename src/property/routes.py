@@ -17,7 +17,13 @@ async def get_property_by_id(
     ):
     return await property_service.get_property_by_id(id)
 
-@router.get("/")
+@router.get("/map")
+async def get_map_locations(
+    property_service: PropertyService = Depends(get_property_service)
+    ):
+    return await property_service.get_map_locations()
+
+@router.get("/page")
 async def get_properties_page(
     page: int,
     elements: int,
@@ -25,9 +31,7 @@ async def get_properties_page(
     ):
     return await property_service.get_properties_page(page, elements)
 
-@router.post("/")
-
-@router.post("/")
+@router.post("/create")
 async def create_property(
     payload: dict,
     images: list[UploadFile] = None,

@@ -10,24 +10,35 @@ router = APIRouter(
     tags=["Admin"]
 )
 
-@router.get("/users")
+@router.get("/users/all")
 async def get_users(
     page: int,
     elements: int,
     admin_service: AdminService = Depends(get_admin_service),
     current_user: TokenData = Depends(get_current_user)
     ):
-    return await admin_service.get_users(current_user, page, elements)
+    return await admin_service.get_users_page(current_user, page, elements)
 
-@router.get("/agents")
+@router.get("/users/agent")
 async def get_agents(
+    page: int,
+    elements: int,
     admin_service: AdminService = Depends(get_admin_service),
     current_user: TokenData = Depends(get_current_user)
     ):
-    return await admin_service.get_agents(current_user)
+    return await admin_service.get_users_page(current_user, page, elements, role="agent")
+
+@router.get("/users/agent")
+async def get_agents(
+    page: int,
+    elements: int,
+    admin_service: AdminService = Depends(get_admin_service),
+    current_user: TokenData = Depends(get_current_user)
+    ):
+    return await admin_service.get_users_page(current_user, page, elements, role="buyer")
 
 @router.get("/properties/unapproved")
-async def get_properties(
+async def get_unapproved_properties(
     page: int,
     elements: int,
     admin_service: AdminService = Depends(get_admin_service),
@@ -53,7 +64,7 @@ async def get_sold_properties(
     ):
     return await admin_service.get_sold_properties(current_user, page, elements)
 
-@router.post("/approve-property")
+@router.patch("/approve-property")
 async def approve_property(
     property_id: int,
     admin_service: AdminService = Depends(get_admin_service),
@@ -61,7 +72,7 @@ async def approve_property(
     ):
     return await admin_service.approve_property(current_user, property_id)
 
-@router.post("/deactivate-property")
+@router.patch("/deactivate-property")
 async def deactivate_property(
     property_id: int,
     admin_service: AdminService = Depends(get_admin_service),
@@ -69,7 +80,7 @@ async def deactivate_property(
     ):
     return await admin_service.deactivate_property(current_user, property_id)
 
-@router.post("/delete-property")
+@router.delete("/delete-property")
 async def delete_property(
     property_id: int,
     admin_service: AdminService = Depends(get_admin_service),
