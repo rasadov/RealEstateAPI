@@ -106,7 +106,6 @@ class AuthService:
         await self.user_service.userRepository.add(agent)
         await self.user_service.userRepository.commit()
 
-
     async def refresh_tokens(
             self,
             request: Request,

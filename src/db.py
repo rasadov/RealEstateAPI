@@ -15,7 +15,10 @@ async def initialize_database():
     This function should be called on application startup.
     """
     global engine, AsyncSessionLocal
-    engine = create_async_engine(Settings.DATABASE_URL, echo=True)
+    engine = create_async_engine(
+        Settings.DATABASE_URL,
+        echo=True
+        )
 
     AsyncSessionLocal = sessionmaker(
         bind=engine,

@@ -12,8 +12,11 @@ router = APIRouter(
 )
 
 @router.patch("/change-password")
-async def change_password(payload: dict, user: TokenData = Depends(get_current_user),
-                          user_service: UserService = Depends(get_user_service)):
+async def change_password(
+    payload: dict,
+    user: TokenData = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service)
+    ):
     return await user_service.change_password(
         user.user_id,
         payload.get("old_password"),

@@ -60,10 +60,11 @@ class UserService:
             password: str,
             ) -> dict:
         """Reset user password"""
-        user_id = oauth2.verify_action_token(token,
-                                             oauth2.AuthTokenTypes.FORGOT_PASSWORD,
-                                             exceptions.CredentialsException,
-                                             )
+        user_id = oauth2.verify_action_token(
+            token,
+            oauth2.AuthTokenTypes.FORGOT_PASSWORD,
+            exceptions.CredentialsException,
+            )
         if user_id is None:
             raise exceptions.InvalidToken
 
@@ -73,7 +74,10 @@ class UserService:
 
         return {"message": "Password reset successfully"}
 
-    async def send_confirm_email(self, email: str) -> dict:
+    async def send_confirm_email(
+            self,
+            email: str,
+            ) -> dict:
         """Send confirm email"""
         user = await self.userRepository.get_user_by(email=email)
         if user is None:
@@ -88,12 +92,16 @@ class UserService:
 
         return {"message": "Email sent with email confirmation instructions"}
 
-    async def confirm_email(self, token: str) -> dict:
+    async def confirm_email(
+            self,
+            token: str,
+            ) -> dict:
         """Confirm user email"""
-        user_id = oauth2.verify_action_token(token,
-                                             oauth2.AuthTokenTypes.CONFIRM_EMAIL,
-                                             exceptions.CredentialsException,
-                                             )
+        user_id = oauth2.verify_action_token(
+            token,
+            oauth2.AuthTokenTypes.CONFIRM_EMAIL,
+            exceptions.CredentialsException,
+            )
         if user_id is None:
             raise exceptions.InvalidToken
 
