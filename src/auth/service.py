@@ -18,14 +18,24 @@ class AuthService:
     user_service: UserService
 
     @staticmethod
-    async def _parse_token(request: Request, tokenType: str) -> int:
+    async def _parse_token(
+            request: Request,
+            tokenType: str,
+            ) -> int:
         """Parse token from request"""
         token = request.cookies.get("access_token")
         if not token:
             raise exceptions.TokenNotFound
-        return oauth2.verify_action_token(token, tokenType, exceptions.CredentialsException)
+        return oauth2.verify_action_token(
+            token,
+            tokenType,
+            exceptions.CredentialsException,
+            )
 
-    async def authenticate(self, email: str) -> JSONResponse:
+    async def authenticate(
+            self,
+            email: str,
+            ) -> JSONResponse:
         """Authenticate user"""
 
         user = await self.user_service.get_user_by_email(email)
@@ -37,12 +47,22 @@ class AuthService:
             "user_id": user.id,
             "level": user.level,
         })
-        response.set_cookie("access_token", tokens["access_token"])
-        response.set_cookie("refresh_token", tokens["refresh_token"])
+        response.set_cookie(
+            "access_token",
+            tokens["access_token"]
+            )
+        response.set_cookie(
+            "refresh_token",
+            tokens["refresh_token"]
+            )
 
         return response
 
-    async def login(self, email: str, password: str) -> JSONResponse:
+    async def login(
+            self,
+            email: str,
+            password: str,
+            ) -> JSONResponse:
         """Login user"""
         user = await self.user_service.get_user_by_email(email)
 
@@ -51,9 +71,13 @@ class AuthService:
 
         return await self.authenticate(user.email)
 
-    async def register(self, payload : dict) -> JSONResponse:
+    async def register(
+            self,
+            payload : dict,
+            ) -> JSONResponse:
         """Register user"""
-        user_exists = await self.user_service.userRepository.get_user_by(email=payload.get("email"))
+        user_exists = await self.user_service.userRepository.get_user_by(
+            email=payload.get("email"))
         if user_exists:
             raise exceptions.EmailAlreadyTaken
 
@@ -65,26 +89,44 @@ class AuthService:
         await self.user_service.userRepository.commit()
         await self.user_service.userRepository.refresh(new_user)
         if payload.get("role") == "agent":
-            self._register_agent(new_user.id, payload.get("serial_number"))
+            self._register_agent(
+                new_user.id,
+                payload.get("serial_number")
+                )
 
         return await self.authenticate(new_user.email)
-    
-    async def _register_agent(self, user_id: int, serial_number: str) -> None:
+
+    async def _register_agent(
+            self,
+            user_id: int,
+            serial_number: str,
+            ) -> None:
         """Register agent"""
         agent = Agent(user_id, serial_number)
         await self.user_service.userRepository.add(agent)
         await self.user_service.userRepository.commit()
 
 
-    async def refresh_tokens(self, request: Request) -> JSONResponse:
+    async def refresh_tokens(
+            self,
+            request: Request,
+            ) -> JSONResponse:
         """Refresh token"""
         user_id = await self._parse_token(request, "refresh_token")
         user = self.user_service.userRepository.get_or_401(user_id)
         tokens = oauth2.generate_auth_tokens(user.id)
 
-        response = JSONResponse(content={"message": "Token refreshed"})
-        response.set_cookie("access_token", tokens["access_token"])
-        response.set_cookie("refresh_token", tokens["refresh_token"])
+        response = JSONResponse(content={
+            "message": "Token refreshed",
+            })
+        response.set_cookie(
+            "access_token",
+            tokens["access_token"]
+            )
+        response.set_cookie(
+            "refresh_token",
+            tokens["refresh_token"]
+            )
 
         return response
 
@@ -107,18 +149,20 @@ class AuthService:
         async with AsyncClient() as client:
             response = await client.post(token_url, data=data)
             access_token = response.json().get("access_token")
-            user_info_response = await client.get("https://www.googleapis.com/oauth2/v1/userinfo",
-                                                headers={"Authorization": f"Bearer {access_token}"})
+            user_info_response = await client.get(
+                "https://www.googleapis.com/oauth2/v1/userinfo",
+                headers={"Authorization": f"Bearer {access_token}"})
 
         if user_info_response.status_code != 200:
             raise exceptions.FailedToGetUserInfo
 
         user_info = user_info_response.json()
-        user = await self.user_service.get_user_by_email(user_info.get("email"))
+        user = await self.user_service.get_user_by_email(
+            user_info.get("email"))
 
         if user:
             return await self.authenticate(user.email)
-        
+
         regitration_data = {
             "email": user_info.get("email"),
             "password": "",

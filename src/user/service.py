@@ -12,12 +12,20 @@ class UserService:
 
     userRepository: UserRepository
 
-    async def get_user_by_email(self, email: str) -> User:
+    async def get_user_by_email(
+            self,
+            email: str,
+            ) -> User:
         """Get user by email"""
         user = await self.userRepository.get_user_by(email=email)
         return user
 
-    async def change_password(self, id: int, old_password: str, new_password: str) -> dict:
+    async def change_password(
+            self,
+            id: int,
+            old_password: str,
+            new_password: str,
+            ) -> dict:
         """Change user password"""
         user = await self.userRepository.get_or_401(id)
         if not user or not user.verify_password(old_password):
@@ -28,7 +36,10 @@ class UserService:
 
         return {"message": "Password changed successfully"}
 
-    async def forgot_password(self, email: str) -> dict:
+    async def forgot_password(
+            self,
+            email: str,
+            ) -> dict:
         """Forgot password"""
         user = await self.userRepository.get_user_by(email=email)
         if user is None:
@@ -43,11 +54,16 @@ class UserService:
 
         return {"message": "Email sent with password reset instructions"}
 
-    async def reset_password(self, token: str, password: str) -> dict:
+    async def reset_password(
+            self,
+            token: str,
+            password: str,
+            ) -> dict:
         """Reset user password"""
         user_id = oauth2.verify_action_token(token,
                                              oauth2.AuthTokenTypes.FORGOT_PASSWORD,
-                                             exceptions.CredentialsException)
+                                             exceptions.CredentialsException,
+                                             )
         if user_id is None:
             raise exceptions.InvalidToken
 
@@ -76,7 +92,8 @@ class UserService:
         """Confirm user email"""
         user_id = oauth2.verify_action_token(token,
                                              oauth2.AuthTokenTypes.CONFIRM_EMAIL,
-                                             exceptions.CredentialsException)
+                                             exceptions.CredentialsException,
+                                             )
         if user_id is None:
             raise exceptions.InvalidToken
 

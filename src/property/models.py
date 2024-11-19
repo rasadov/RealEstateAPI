@@ -43,12 +43,13 @@ class Property(CreateTimestampMixin):
     def approve(self) -> None:
         self.approved = True
         self.is_active = True
+        self.location.is_active = True
 
     def deactivate(self) -> None:
         self.is_active = False
         self.location.is_active = False
 
-class PropertyImage(CreateTimestampMixin):
+class PropertyImage(CustomBase):
     """Property image model."""
 
     __tablename__ = "PropertyImageModel"
@@ -64,7 +65,7 @@ class Location(CustomBase):
     __tablename__ = "LocationModel"
 
     property_id: Mapped[int] = mapped_column(Integer, ForeignKey("PropertyModel.id"), nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
 
@@ -78,7 +79,7 @@ class PropertyInfo(CustomBase):
     total_area: Mapped[float] = mapped_column(Float, nullable=False)
     living_area: Mapped[float] = mapped_column(Float, nullable=False)
     bedrooms: Mapped[int] = mapped_column(Integer, nullable=False)
-    living_ooms: Mapped[int] = mapped_column(Integer, nullable=False)
+    living_rooms: Mapped[int] = mapped_column(Integer, nullable=False)
     floor: Mapped[int] = mapped_column(Integer, nullable=False)
     floors: Mapped[int] = mapped_column(Integer, nullable=False)
     district: Mapped[str] = mapped_column(String, nullable=False)

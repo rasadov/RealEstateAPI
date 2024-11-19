@@ -23,7 +23,11 @@ def get_current_user(
         raise CredentialsException
 
     try:
-        payload = jwt.decode(access_token, Settings.SECRET_KEY, algorithms=[Settings.ALGORITHM])
+        payload = jwt.decode(
+            access_token,
+            Settings.SECRET_KEY,
+            algorithms=[Settings.ALGORITHM]
+            )
         user_id = payload.get("user_id")
         if user_id is None:
             raise CredentialsException

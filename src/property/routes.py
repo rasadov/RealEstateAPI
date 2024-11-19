@@ -29,7 +29,8 @@ async def get_properties_page(
     elements: int,
     property_service: PropertyService = Depends(get_property_service)
     ):
-    return await property_service.get_properties_page(page, elements)
+    return await property_service.get_properties_page(
+        page, elements)
 
 @router.post("/create")
 async def create_property(
@@ -38,7 +39,8 @@ async def create_property(
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
     ):
-    return await property_service.create_property(payload, images, user.user_id)
+    return await property_service.create_property(
+        payload, images, user.user_id)
 
 @router.put("/{id}")
 async def update_property(
@@ -47,7 +49,8 @@ async def update_property(
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
     ):
-    return await property_service.update_property(id, payload, user.user_id)
+    return await property_service.update_property(
+        id, payload, user.user_id)
 
 @router.post("/{id}/image")
 async def add_image_to_property(
@@ -56,7 +59,8 @@ async def add_image_to_property(
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
     ):
-    return await property_service.add_image_to_property(id, image, user.user_id)
+    return await property_service.add_image_to_property(
+        id, image, user.user_id)
 
 @router.delete("/{id}/image/{image_id}")
 async def delete_image_from_property(
@@ -65,7 +69,8 @@ async def delete_image_from_property(
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
     ):
-    return await property_service.delete_image_from_property(id, image_id, user.user_id)
+    return await property_service.delete_image_from_property(
+        id, image_id, user.user_id)
 
 @router.delete("/{id}")
 async def delete_property(
@@ -73,7 +78,8 @@ async def delete_property(
     user: TokenData   = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
     ):
-    return await property_service.delete_property(id, user.user_id)
+    return await property_service.delete_property(
+        id, user.user_id)
 
 @router.post("/{id}/approve")
 async def approve_property(
@@ -81,4 +87,5 @@ async def approve_property(
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
     ):
-    return await property_service.approve_property(id, user.user_id)
+    return await property_service.approve_property(
+        id, user.user_id)

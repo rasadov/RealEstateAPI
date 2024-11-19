@@ -52,7 +52,10 @@ class LocalStaticFilesManager(BaseStaticFilesManager):
         """Upload file, ensuring unique filenames"""
         try:
             unique_filename = self._generate_unique_filename(file.filename)
-            file_path = os.path.join(self.STATIC_FILES_DIR, unique_filename)
+            file_path = os.path.join(
+                self.STATIC_FILES_DIR,
+                unique_filename
+                )
             with open(file_path, "wb") as f:
                 f.write(file.file.read())
             return file_path
@@ -111,7 +114,10 @@ class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
     def get(self, file_path: str) -> Optional[bytes]:
         """Get file from S3"""
         try:
-            response = self.s3_client.get_object(Bucket=self.AWS_BUCKET_NAME, Key=file_path)
+            response = self.s3_client.get_object(
+                Bucket=self.AWS_BUCKET_NAME,
+                Key=file_path,
+                )
             return response["Body"].read()
         except self.s3_client.exceptions.NoSuchKey:
             return None
@@ -129,7 +135,11 @@ class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
         unique_filename = self._generate_unique_filename(file.filename)
         file_path = f"uploads/{unique_filename}"
         try:
-            self.s3_client.upload_fileobj(file.file, self.AWS_BUCKET_NAME, file_path)
+            self.s3_client.upload_fileobj(
+                file.file,
+                self.AWS_BUCKET_NAME,
+                file_path,
+                )
             return "https://%s.s3.%s.amazonaws.com/%s".format(
                 self.AWS_BUCKET_NAME, self.AWS_REGION, file_path
             )
@@ -139,7 +149,10 @@ class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
     def delete(self, file_path: str) -> None:
         """Delete file from S3"""
         try:
-            self.s3_client.delete_object(Bucket=self.AWS_BUCKET_NAME, Key=file_path)
+            self.s3_client.delete_object(
+                Bucket=self.AWS_BUCKET_NAME,
+                Key=file_path,
+                )
             print(f"Deleted {file_path} from S3")
         except Exception as e:
             raise exceptions.FileDeleteError(f"Error deleting file from S3: {e}")
