@@ -71,22 +71,6 @@ async def delete_property(
     ):
     return await property_service.delete_property(id, user.user_id)
 
-@router.post("/{id}/like")
-async def like_property(
-    id: int,
-    user: TokenData = Depends(get_current_user),
-    property_service: PropertyService = Depends(get_property_service)
-    ):
-    return await property_service.like_property(id, user.user_id)
-
-@router.delete("/{id}/like")
-async def unlike_property(
-    id: int,
-    user: TokenData = Depends(get_current_user),
-    property_service: PropertyService = Depends(get_property_service)
-    ):
-    return await property_service.unlike_property(id, user.user_id)
-
 @router.post("/{id}/approve")
 async def approve_property(
     id: int,

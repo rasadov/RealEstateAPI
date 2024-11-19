@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from fastapi.responses import JSONResponse, Response
 from fastapi import Request
 from httpx import AsyncClient
@@ -34,7 +35,7 @@ class AuthService:
             "message": "Login successful",
             "email": user.email,
             "user_id": user.id,
-            "role": user.role,
+            "level": user.level,
         })
         response.set_cookie("access_token", tokens["access_token"])
         response.set_cookie("refresh_token", tokens["refresh_token"])

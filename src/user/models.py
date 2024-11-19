@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -6,7 +7,7 @@ from src.base.models import CreateTimestampMixin, CustomBase
 from src.auth import utils
 
 if TYPE_CHECKING:
-    from src.property.models import Property, PropertyLike
+    from src.property.models import Property
 
 class User(CreateTimestampMixin):
     """User model."""
@@ -19,13 +20,11 @@ class User(CreateTimestampMixin):
     bio: Mapped[str] = mapped_column(nullable=True)
     password_hash: Mapped[str] = mapped_column(nullable=False)
     is_confirmed: Mapped[bool] = mapped_column(default=False)
-    role_id: Mapped[int] = mapped_column(ForeignKey("RoleModel.id"), nullable=True)
+    role: Mapped[str] = mapped_column(nullable=True, default="buyer")
+    level: Mapped[int] = mapped_column(nullable=False, default=0)
 
-    role: Mapped["Roles"] = relationship("Roles")
     properties: Mapped[list["Property"]] = relationship("Property", back_populates="owner")
-    likes: Mapped[list["PropertyLike"]] = relationship("PropertyLike", back_populates="user")
     approvals: Mapped[list["Approval"]] = relationship("Approval", back_populates="user")
-
 
     def verify_password(self, password: str) -> bool:
         """Verify user password"""
@@ -55,7 +54,7 @@ class Agent(CustomBase):
         self.user_id = user_id
         self.serial_number = serial_number
 
-class Approval(CustomBase):
+class Approval(CreateTimestampMixin):
     """Approval model."""
 
     __tablename__ = "ApprovalModel"
@@ -65,10 +64,3 @@ class Approval(CustomBase):
 
     user: Mapped["User"] = relationship("User")
     property: Mapped["Property"] = relationship("Property")
-
-class Roles(CustomBase):
-    """Role model."""
-
-    __tablename__ = "RoleModel"
-
-    name: Mapped[str] = mapped_column(nullable=False)

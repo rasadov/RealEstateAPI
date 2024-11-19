@@ -38,9 +38,11 @@ class UserRepository(BaseRepository[User]):
             raise exceptions.Unauthorized
         return user
 
-    async def get_users_page(self, limit: int, offset: int) -> Sequence[User]:
+    async def get_users_page_by(self, limit: int, offset: int, **kwargs) -> Sequence[User]:
         """Get users page"""
-        result = await self.session.execute(select(User).limit(limit).offset(offset))
+        result = await self.session.execute(
+            select(User).filter_by(**kwargs).limit(limit).offset(offset)
+            )
         return result.scalars().all()
 
     async def get_users_count(self) -> int:

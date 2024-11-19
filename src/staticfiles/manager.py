@@ -1,9 +1,10 @@
 import os, io, uuid
 from typing import Optional
 from abc import ABC, abstractmethod
+
 import boto3
-from fastapi import UploadFile
 from PIL import Image
+from fastapi import UploadFile
 
 import src.staticfiles.exceptions as exceptions
 from src.config import S3Settings

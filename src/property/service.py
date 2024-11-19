@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Dict, Any
+
 from fastapi import UploadFile
 
 from src.property.repository import PropertyRepository
@@ -37,7 +38,7 @@ class PropertyService:
         """Approve property"""
         user = await self.userRepository.get_or_401(user_id)
 
-        if user.role != "admin":
+        if user.level < 1:
             raise exceptions.Unauthorized
 
         return await self.propertyRepository.approve_property(property_id)
@@ -47,7 +48,7 @@ class PropertyService:
         user = await self.userRepository.get_or_401(user_id)
         property = await self.propertyRepository.get_or_404(property_id)
 
-        if user.role != "admin" and property.owner_id != user_id:
+        if property.owner_id != user_id:
             raise exceptions.Unauthorized
 
         return await self.propertyRepository.delete_property(property_id, sold)
@@ -57,7 +58,7 @@ class PropertyService:
         user = await self.userRepository.get_or_401(user_id)
         property = await self.propertyRepository.get_or_404(property_id)
 
-        if user.role != "admin" and property.owner_id != user_id:
+        if user.level < 1 and property.owner_id != user_id:
             raise exceptions.Unauthorized
 
         return await self.propertyRepository.update_property(property_id, payload)
@@ -67,25 +68,17 @@ class PropertyService:
         user = await self.userRepository.get_or_401(user_id)
         property = await self.propertyRepository.get_or_404(property_id)
 
-        if user.role != "admin" and property.owner_id != user_id:
+        if user.level < 1 and property.owner_id != user_id:
             raise exceptions.Unauthorized
 
         return await self.propertyRepository.add_image_to_property(property_id, image)
-
-    async def like_property(self, property_id: int, user_id: int) -> Property:
-        """Like property"""
-        return await self.propertyRepository.like_property(property_id, user_id)
-
-    async def unlike_property(self, property_id: int, user_id: int) -> None:
-        """Unlike property"""
-        return await self.propertyRepository.unlike_property(property_id, user_id)
 
     async def delete_image_from_property(self, property_id: int, image_id: int, user_id: int) -> Property:
         """Delete property image"""
         user = await self.userRepository.get_or_401(user_id)
         property = await self.propertyRepository.get_or_404(property_id)
 
-        if user.role != "admin" and property.owner_id != user_id:
+        if user.level < 1 and property.owner_id != user_id:
             raise exceptions.Unauthorized
 
         return await self.propertyRepository.delete_image_from_property(property_id, image_id)

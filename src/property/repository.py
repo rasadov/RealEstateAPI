@@ -8,9 +8,10 @@ from fastapi import UploadFile
 
 from src.base.repository import BaseRepository
 from src.staticfiles.manager import BaseStaticFilesManager
-from src.property.models import Property, PropertyLike, PropertyImage, SoldProperty
+from src.property.models import Property, PropertyImage
+from src.user.models import Approval
 from src.property import exceptions
-from src.background_tasks.tasks import delete_property
+from src.background_tasks.tasks import delete_property_images
 
 @dataclass
 class PropertyRepository(BaseRepository[Property]):
@@ -23,11 +24,45 @@ class PropertyRepository(BaseRepository[Property]):
         result = await self.session.execute(select(Property).filter_by(**kwargs))
         return result.scalars().first()
 
-    async def get_like_by(self, **kwargs) -> PropertyLike:
-        """Get like by any field"""
-        result = await self.session.execute(select(PropertyLike).filter_by(**kwargs))
-        return result.scalars().first()
+    async def get_approvals_page(self, limit: int, offset: int) -> Sequence[Approval]:
+        """Get approvals page"""
+        result = await self.session.execute(
+            select(Approval).
+            order_by(Approval.created_at.desc()).
+            limit(limit).offset(offset)
+        )
+        return result.scalars().all()
+    
+    async def get_sold_properties_page(self, limit: int, offset: int) -> Sequence[Property]:
+        """Get sold properties page"""
+        result = await self.session.execute(
+            select(Property).
+            filter(Property.is_sold == True).
+            order_by(Property.created_at.desc()).
+            limit(limit).offset(offset)
+        )
+        return result.scalars().all()
 
+    async def get_properties_page(self, limit: int, offset: int) -> Sequence[Property]:
+        """Get properties page"""
+        result = await self.session.execute(
+            select(Property).
+            filter(Property.is_active == True and Property.is_sold == False).
+            order_by(Property.created_at.desc()).
+            limit(limit).offset(offset)
+        )
+        return result.scalars().all()
+
+    async def get_properties_page_by(self, limit: int, offset: int, **kwargs) -> Sequence[Property]:
+        """Get properties page"""
+        result = await self.session.execute(
+            select(Property).
+            filter_by(**kwargs).
+            order_by(Property.created_at.desc()).
+            limit(limit).offset(offset)
+        )
+        return result.scalars().all()
+    
     async def get_or_404(self, property_id: int) -> Property:
         """Get property by id or raise 404"""
         result = await self.session.execute(
@@ -41,27 +76,10 @@ class PropertyRepository(BaseRepository[Property]):
             raise exceptions.PropertyNotFound
         return property_obj
 
-    async def get_properties_page(self, limit: int, offset: int) -> Sequence[Property]:
-        """Get properties page"""
-        result = await self.session.execute(
-            select(Property).
-            filter(Property.is_active == True).
-            order_by(Property.created_at.desc()).
-            limit(limit).offset(offset)
-        )
-        return result.scalars().all()
-
     async def get_properties_count(self) -> int:
         """Get properties count"""
         result = await self.session.execute(select(func.count(Property.id)))
         return result.scalar()
-
-    async def get_property_likes(self, property_id: int) -> list[PropertyLike]:
-        """Get property likes"""
-        result = await self.session.execute(
-            select(PropertyLike).filter(PropertyLike.property_id == property_id)
-            )
-        return result.scalars().all()
 
     async def _get_property_image(self, image_id: int) -> PropertyImage:
         """Get property image by id"""
@@ -94,13 +112,6 @@ class PropertyRepository(BaseRepository[Property]):
         await self.commit()
         return property_obj
 
-    async def like_property(self, property_id: int, user_id: int) -> Property:
-        """Like property"""
-        like = PropertyLike(property_id=property_id, user_id=user_id)
-        self.add(like)
-        await self.commit()
-        return await self.get_or_404(property_id)
-
     async def update_property(self, property_id: int, payload: dict) -> Property:
         """Update property"""
         property_obj = await self.get_or_404(property_id)
@@ -128,21 +139,14 @@ class PropertyRepository(BaseRepository[Property]):
         property = await self.get_or_404(property_id)
 
         if sold:
-            sold_property = SoldProperty(
-                property_id=property.id,
-                price=property.price,
-                district=property.district,
-                longitude=property.longitude,
-                latitude=property.latitude,
-            )
-            self.add(sold_property)        
-        property.deactivate()
+            property.is_sold = True
         await self.commit()
 
-        delete_property.delay(property_id)
+        delete_property_images.delay(property_id)
 
-    async def unlike_property(self, property_id: int, user_id: int) -> None:
-        """Unlike property"""
-        like = self.get_like_by(property_id=property_id, user_id=user_id)
-        self.delete(like)
+    async def admin_delete_property(self, property_id: int) -> None:
+        """Delete property"""
+        await self.get_or_404(property_id)
+        await self.delete(property_id)
         await self.commit()
+        delete_property_images.delay(property_id)

@@ -1,12 +1,12 @@
 from typing import TYPE_CHECKING
+
 from sqlalchemy import ForeignKey, Integer, Float, String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.base.models import CreateTimestampMixin, CustomBase
-from src.user.models import User
 
 if TYPE_CHECKING:
-    from src.user.models import User
+    from src.user.models import Agent
 
 class Listing(CustomBase):
     """Listing model."""
@@ -16,10 +16,10 @@ class Listing(CustomBase):
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("UserModel.id"), nullable=False)
+    agent_id: Mapped[int] = mapped_column(Integer, ForeignKey("AgentModel.id"), nullable=False)
 
     properties: Mapped[list["Property"]] = relationship("Property")
-    user: Mapped["User"] = relationship("User")
+    agent: Mapped["Agent"] = relationship("Agent")
 
 class Property(CreateTimestampMixin):
     """Property model."""
@@ -29,37 +29,23 @@ class Property(CreateTimestampMixin):
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
     price: Mapped[float] = mapped_column(Float, nullable=False)
-    district: Mapped[str] = mapped_column(String, nullable=False)
-    longitude: Mapped[float] = mapped_column(Float, nullable=False)
-    latitude: Mapped[float] = mapped_column(Float, nullable=False)
-    area: Mapped[float] = mapped_column(Float, nullable=False)
-    listing_id: Mapped[int] = mapped_column(Integer, ForeignKey("ListingModel.id"), nullable=True)
     approved: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_sold: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    owner_id: Mapped[int] = mapped_column(Integer, ForeignKey("UserModel.id"), nullable=False)
+    listing_id: Mapped[int] = mapped_column(Integer, ForeignKey("ListingModel.id"), nullable=True)
+    owner_id: Mapped[int] = mapped_column(Integer, ForeignKey("AgentModel.id"), nullable=False)
 
-    owner: Mapped["User"] = relationship("User", back_populates="properties")
+    location: Mapped["Location"] = relationship("Location", uselist=False, backref="property")
+    owner: Mapped["Agent"] = relationship("Agent", back_populates="properties")
     images: Mapped[list["PropertyImage"]] = relationship("PropertyImage", back_populates="property")
-    likes: Mapped[list["PropertyLike"]] = relationship("PropertyLike", back_populates="property")
+    info: Mapped["PropertyInfo"] = relationship("PropertyInfo", uselist=False, backref="property")
 
     def approve(self) -> None:
         self.approved = True
-    
+        self.is_active = True
+
     def deactivate(self) -> None:
         self.is_active = False
-
-class SoldProperty(CreateTimestampMixin):
-    """Sold property model."""
-
-    __tablename__ = "SoldPropertyModel"
-
-    property_id: Mapped[int] = mapped_column(Integer, ForeignKey("PropertyModel.id"), nullable=False)
-    price: Mapped[float] = mapped_column(Float, nullable=False)
-    district: Mapped[str] = mapped_column(String, nullable=False)
-    longitude: Mapped[float] = mapped_column(Float, nullable=False)
-    latitude: Mapped[float] = mapped_column(Float, nullable=False)
-
-    property: Mapped["Property"] = relationship("Property")
 
 class PropertyImage(CreateTimestampMixin):
     """Property image model."""
@@ -71,13 +57,25 @@ class PropertyImage(CreateTimestampMixin):
 
     property: Mapped["Property"] = mapped_column("Property", back_populates="images")
 
-class PropertyLike(CustomBase):
-    """Property like model."""
+class Location(CustomBase):
+    """Location model."""
 
-    __tablename__ = "PropertyLikeModel"
+    __tablename__ = "LocationModel"
 
     property_id: Mapped[int] = mapped_column(Integer, ForeignKey("PropertyModel.id"), nullable=False)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("UserModel.id"), nullable=False)
+    longitude: Mapped[float] = mapped_column(Float, nullable=False)
+    latitude: Mapped[float] = mapped_column(Float, nullable=False)
 
-    property: Mapped["Property"] = relationship("Property", back_populates="likes")
-    user: Mapped["User"] = relationship("User")
+class PropertyInfo(CustomBase):
+    """Property info model."""
+
+    __tablename__ = "PropertyInfoModel"
+
+    property_id: Mapped[int] = mapped_column(Integer, ForeignKey("PropertyModel.id"), nullable=False)
+    area: Mapped[float] = mapped_column(Float, nullable=False)
+    rooms: Mapped[int] = mapped_column(Integer, nullable=False)
+    bathrooms: Mapped[int] = mapped_column(Integer, nullable=False)
+    floor: Mapped[int] = mapped_column(Integer, nullable=False)
+    isApartment: Mapped[bool] = mapped_column(Boolean, default=False)
+    district: Mapped[str] = mapped_column(String, nullable=False)
+    address: Mapped[str] = mapped_column(String, nullable=False)
