@@ -57,7 +57,7 @@ class PropertyImage(CustomBase):
     property_id: Mapped[int] = mapped_column(Integer, ForeignKey("PropertyModel.id"), nullable=False)
     path: Mapped[str] = mapped_column(String, nullable=False)
 
-    property: Mapped["Property"] = mapped_column("Property", back_populates="images")
+    property: Mapped["Property"] = relationship("Property", back_populates="images")
 
 class Location(CustomBase):
     """Location model."""

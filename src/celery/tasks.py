@@ -1,11 +1,16 @@
+import os
 from celery import Celery
 from sqlalchemy.orm import Session
 
-from src.background_tasks.db_celery import get_sync_db_session
+from src.celery.db_celery import get_sync_db_session
 from src.staticfiles.dependencies import get_static_files_manager
 from src.property.models import Property, PropertyImage
 
-celery_app = Celery('tasks', broker='redis://localhost:6379/0')
+# Get the Redis URL from the environment variable
+redis_url = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+
+# Initialize the Celery app with the Redis URL
+celery_app = Celery('tasks', broker=redis_url)
 
 @celery_app.task
 def delete_property_images(id: int):

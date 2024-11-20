@@ -11,7 +11,7 @@ from src.staticfiles.manager import BaseStaticFilesManager
 from src.property.models import Property, PropertyImage, Location
 from src.user.models import Approval
 from src.property import exceptions
-from src.background_tasks.tasks import delete_property_images
+from src.celery.tasks import delete_property_images
 
 @dataclass
 class PropertyRepository(BaseRepository[Property]):
