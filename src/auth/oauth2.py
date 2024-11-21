@@ -42,17 +42,17 @@ def create_token(
     return _create_auth_token(data, expire_minutes)
 
 def create_access_token(
-        user_id: int,
+        user_id: str,
         ) -> str:
     """Create access token"""
     return create_token(
-        user_id,
+        str(user_id),
         AuthTokenTypes.ACCESS,
         Settings.ACCESS_TOKEN_EXPIRE_MINUTES,
         )
 
 def create_refresh_token(
-        user_id: int,
+        user_id: str,
         ) -> str:
     """Create refresh token"""
     return create_token(
@@ -85,8 +85,8 @@ def generate_auth_tokens(
         user_id: int,
         ) -> dict:
     """Generate access and refresh tokens"""
-    access_token = create_access_token(user_id)
-    refresh_token = create_refresh_token(user_id)
+    access_token = create_access_token(str(user_id))
+    refresh_token = create_refresh_token(str(user_id))
 
     return {
         "access_token": access_token,

@@ -82,14 +82,17 @@ class AuthService:
             raise exceptions.EmailAlreadyTaken
 
         new_user = User(
+            name=payload.get("name"),
             email=payload.get("email"),
             password_hash=hash_password(payload.get("password"))
         )
-        await self.user_service.userRepository.add(new_user)
+        self.user_service.userRepository.add(new_user)
         await self.user_service.userRepository.commit()
         await self.user_service.userRepository.refresh(new_user)
         if payload.get("role") == "agent":
-            self._register_agent(
+            if not payload.get("serial_number"):
+                raise exceptions.InvalidSerialNumber
+            await self._register_agent(
                 new_user.id,
                 payload.get("serial_number")
                 )
@@ -103,7 +106,7 @@ class AuthService:
             ) -> None:
         """Register agent"""
         agent = Agent(user_id, serial_number)
-        await self.user_service.userRepository.add(agent)
+        self.user_service.userRepository.add(agent)
         await self.user_service.userRepository.commit()
 
     async def refresh_tokens(

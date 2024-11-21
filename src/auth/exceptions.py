@@ -58,3 +58,10 @@ class Unauthorized(HTTPException):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Unauthorized",
         )
+
+class InvalidSerialNumber(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid serial number",
+        )

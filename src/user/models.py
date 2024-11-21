@@ -23,7 +23,6 @@ class User(CreateTimestampMixin):
     role: Mapped[str] = mapped_column(nullable=True, default="buyer")
     level: Mapped[int] = mapped_column(nullable=False, default=0)
 
-    properties: Mapped[list["Property"]] = relationship("Property", back_populates="owner")
     approvals: Mapped[list["Approval"]] = relationship("Approval", back_populates="user")
 
     def verify_password(self, password: str) -> bool:
@@ -48,6 +47,7 @@ class Agent(CustomBase):
     company: Mapped[str] = mapped_column()
 
     user: Mapped["User"] = relationship("User")
+    properties: Mapped[list["Property"]] = relationship("Property", back_populates="owner")
 
     def __init__(self, user_id: int, serial_number: str) -> None:
         """Initialize agent"""

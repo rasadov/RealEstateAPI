@@ -62,6 +62,16 @@ class LocalStaticFilesManager(BaseStaticFilesManager):
         except Exception as e:
             print(f"Error uploading file: {e}")
             raise e
+    
+    def delete(self, file_path: str) -> None:
+        """Delete file"""
+        try:
+            os.remove(file_path)
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            print(f"Error deleting file: {e}")
+            raise e
 
 class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
     """S3 static files service with file size, type limitations, and image processing"""
