@@ -12,8 +12,8 @@ from src.config import Settings
 class AuthTokenTypes(str, Enum):
     """Enum class with authentication token types"""
 
-    ACCESS = "auth-access"
-    REFRESH = "auth-refresh"
+    ACCESS = "access_token"
+    REFRESH = "refresh_token"
     FORGOT_PASSWORD = "forgot-password"
     CONFIRM_EMAIL = "confirm-email"
 
@@ -38,11 +38,11 @@ def create_token(
         expire_minutes: int,
         ) -> str:
     """Create a token with the specified type and expiration"""
-    data = {"sub": token_type, "user_id": user_id}
+    data = {"action": token_type, "user_id": user_id}
     return _create_auth_token(data, expire_minutes)
 
 def create_access_token(
-        user_id: str,
+        user_id: int,
         ) -> str:
     """Create access token"""
     return create_token(
@@ -52,7 +52,7 @@ def create_access_token(
         )
 
 def create_refresh_token(
-        user_id: str,
+        user_id: int,
         ) -> str:
     """Create refresh token"""
     return create_token(
@@ -85,8 +85,8 @@ def generate_auth_tokens(
         user_id: int,
         ) -> dict:
     """Generate access and refresh tokens"""
-    access_token = create_access_token(str(user_id))
-    refresh_token = create_refresh_token(str(user_id))
+    access_token = create_access_token(user_id)
+    refresh_token = create_refresh_token(user_id)
 
     return {
         "access_token": access_token,
@@ -104,8 +104,9 @@ def decode_token(
             Settings.SECRET_KEY,
             algorithms=[Settings.ALGORITHM]
             )
-        user_id: str = payload.get("user_id")
-        token_data = TokenData(user_id=user_id)
+        token_data = TokenData(
+            user_id=payload.get("user_id"),
+            action=payload.get("action"))
         return token_data
     except jwt.PyJWTError:
         raise credentials_exception
@@ -117,6 +118,6 @@ def verify_action_token(
         ) -> int | None:
     """Verify action token"""
     token_data = decode_token(token, credentials_exception)
-    if token_data and token_data.user_id and token_data.sub == action:
+    if token_data and token_data.user_id and token_data.action == action:
         return token_data.user_id
     return None

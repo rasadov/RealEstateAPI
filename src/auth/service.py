@@ -18,12 +18,12 @@ class AuthService:
     user_service: UserService
 
     @staticmethod
-    async def _parse_token(
+    def _parse_token(
             request: Request,
             tokenType: str,
             ) -> int:
         """Parse token from request"""
-        token = request.cookies.get("access_token")
+        token = request.cookies.get(tokenType)
         if not token:
             raise exceptions.TokenNotFound
         return oauth2.verify_action_token(
@@ -42,7 +42,7 @@ class AuthService:
         tokens = oauth2.generate_auth_tokens(user.id)
 
         response = JSONResponse(content={
-            "message": "Login successful",
+            "detail": "Login successful",
             "email": user.email,
             "user_id": user.id,
             "level": user.level,
@@ -90,10 +90,8 @@ class AuthService:
         await self.user_service.userRepository.commit()
         await self.user_service.userRepository.refresh(new_user)
         if payload.get("role") == "agent":
-            if not payload.get("serial_number"):
-                raise exceptions.InvalidSerialNumber
             await self._register_agent(
-                new_user.id,
+                new_user,
                 payload.get("serial_number")
                 )
 
@@ -101,11 +99,13 @@ class AuthService:
 
     async def _register_agent(
             self,
-            user_id: int,
+            user: User,
             serial_number: str,
             ) -> None:
         """Register agent"""
-        agent = Agent(user_id, serial_number)
+        if not serial_number:
+            raise exceptions.InvalidSerialNumber
+        agent = Agent(user.id, serial_number)
         self.user_service.userRepository.add(agent)
         await self.user_service.userRepository.commit()
 
@@ -114,12 +114,12 @@ class AuthService:
             request: Request,
             ) -> JSONResponse:
         """Refresh token"""
-        user_id = await self._parse_token(request, "refresh_token")
-        user = self.user_service.userRepository.get_or_401(user_id)
+        user_id = self._parse_token(request, oauth2.AuthTokenTypes.REFRESH)
+        user = await self.user_service.userRepository.get_or_401(user_id)
         tokens = oauth2.generate_auth_tokens(user.id)
 
         response = JSONResponse(content={
-            "message": "Token refreshed",
+            "detail": "Token refreshed",
             })
         response.set_cookie(
             "access_token",
@@ -136,7 +136,7 @@ class AuthService:
     async def logout(response: Response) -> dict:
         """Logout user"""
         response.delete_cookie("access_token")
-        return {"message": "Logged out successfully"}
+        return {"detail": "Logged out successfully"}
 
     async def auth_google(self, code: str) -> JSONResponse:
         """Authenticate user with Google"""

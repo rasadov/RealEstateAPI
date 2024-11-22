@@ -34,7 +34,7 @@ class UserService:
         user.change_password(new_password)
         await self.userRepository.commit()
 
-        return {"message": "Password changed successfully"}
+        return {"detail": "Password changed successfully"}
 
     async def forgot_password(
             self,
@@ -52,7 +52,7 @@ class UserService:
             f"Click on the link to reset your password: /reset-password?token={token}"
         )
 
-        return {"message": "Email sent with password reset instructions"}
+        return {"detail": "Email sent with password reset instructions"}
 
     async def reset_password(
             self,
@@ -72,7 +72,7 @@ class UserService:
         user.change_password(password)
         await self.userRepository.commit()
 
-        return {"message": "Password reset successfully"}
+        return {"detail": "Password reset successfully"}
 
     async def send_confirm_email(
             self,
@@ -90,7 +90,7 @@ class UserService:
             f"Click on the link to confirm your email: /confirm-email?token={token}" # TO DO: Add frontend URL
         )
 
-        return {"message": "Email sent with email confirmation instructions"}
+        return {"detail": "Email sent with email confirmation instructions"}
 
     async def confirm_email(
             self,
@@ -109,4 +109,4 @@ class UserService:
         user.confirm_email()
         await self.userRepository.commit()
 
-        return {"message": "Email confirmed successfully"}
+        return {"detail": "Email confirmed successfully"}

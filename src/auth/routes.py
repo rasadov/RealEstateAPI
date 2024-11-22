@@ -1,7 +1,7 @@
 """
 Contains routes for user authentication and authorization.
 """
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Response, Request, Depends
 
 from src.auth.service import AuthService
 from src.auth.dependencies import get_auth_service
@@ -51,3 +51,10 @@ async def auth_google(
     auth_service: AuthService = Depends(get_auth_service),
     ):
     return await auth_service.auth_google(code)
+
+@router.post("/refresh")
+async def refresh_token(
+    request: Request,
+    auth_service: AuthService = Depends(get_auth_service),
+    ):
+    return await auth_service.refresh_tokens(request)

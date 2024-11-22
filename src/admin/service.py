@@ -63,7 +63,7 @@ class AdminService:
         await self.property_repository.get_or_404(property_id)
         await self.property_repository.admin_delete_property(property_id)
         return {
-            "message": "Property deleted",
+            "detail": "Property deleted",
         }
 
     async def get_unapproved_properties_page(
@@ -130,7 +130,7 @@ class AdminService:
         property_obj.approve()
         await self.property_repository.commit()
         return {
-            "message": "Property approved",
+            "detail": "Property approved",
         }
 
     async def deactivate_property(
@@ -149,5 +149,5 @@ class AdminService:
         property_obj.deactivate()
         await self.property_repository.commit()
         return {
-            "message": "Property deactivated",
+            "detail": "Property deactivated",
         }
