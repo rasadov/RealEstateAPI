@@ -1,5 +1,4 @@
 import os
-import time
 
 import pytest
 import httpx
@@ -86,6 +85,21 @@ async def test_invalid_login():
     })
     assert response.status_code == 401
     assert response.json().get("detail") == "Invalid credentials"
+
+@pytest.mark.asyncio
+async def test_log_out():
+    response = httpx.post("http://localhost:8000/api/v1/auth/login", json={
+        "email": f"testemail{const_rand_1}@test.com",
+        "password": "testpassword",
+    })
+
+    assert response.status_code == 200
+    assert response.json().get("detail") == "Login successful"
+
+    response = httpx.post("http://localhost:8000/api/v1/auth/logout", cookies=response.cookies)
+    assert response.status_code == 200
+    assert response.json().get("detail") == "Logged out successfully"
+    assert response.cookies.get("access_token") == None
 
 @pytest.mark.asyncio
 async def test_refresh():

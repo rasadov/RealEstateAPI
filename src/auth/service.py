@@ -80,7 +80,8 @@ class AuthService:
             email=payload.get("email"))
         if user_exists:
             raise exceptions.EmailAlreadyTaken
-
+        if payload.get("role") == "agent" and not payload.get("serial_number"):
+            raise exceptions.InvalidSerialNumber
         new_user = User(
             name=payload.get("name"),
             email=payload.get("email"),
@@ -103,8 +104,7 @@ class AuthService:
             serial_number: str,
             ) -> None:
         """Register agent"""
-        if not serial_number:
-            raise exceptions.InvalidSerialNumber
+        user.role = "agent"
         agent = Agent(user.id, serial_number)
         self.user_service.userRepository.add(agent)
         await self.user_service.userRepository.commit()
