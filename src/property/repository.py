@@ -28,7 +28,7 @@ class PropertyRepository(BaseRepository[Property]):
             filter(Location.is_active == True)
         )
         return result.scalars().all()
-    
+
     async def get_at_location(
             self,
             latitude: float,
@@ -67,7 +67,7 @@ class PropertyRepository(BaseRepository[Property]):
             limit(limit).offset(offset)
         )
         return result.scalars().all()
-    
+
     async def get_sold_properties_page(
             self,
             limit: int,
@@ -115,7 +115,18 @@ class PropertyRepository(BaseRepository[Property]):
             limit(limit).offset(offset)
         )
         return result.scalars().all()
-    
+
+    async def get_properties_page_by_count(
+            self,
+            **kwargs,
+            ) -> int:
+        """Get properties page count"""
+        result = await self.session.execute(
+            select(func.count(Property.id)).
+            filter_by(**kwargs)
+        )
+        return result.scalar()
+
     async def get_or_404(
             self,
             property_id: int,
@@ -202,7 +213,7 @@ class PropertyRepository(BaseRepository[Property]):
             setattr(property_obj, key, value)
         await self.commit()
         return property_obj
-    
+
     async def approve_property(
             self,
             property_id: int,
@@ -219,7 +230,7 @@ class PropertyRepository(BaseRepository[Property]):
             ) -> None:
         """Delete image from property"""
         image = await self._get_property_image(image_id)
-        await self.staticFilesManager.delete(image.path)
+        await self.staticFilesManager.delete(image.image_url)
         await self.delete(image_id)
         await self.commit()
 

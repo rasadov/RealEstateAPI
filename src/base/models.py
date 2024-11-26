@@ -1,7 +1,7 @@
 """Base model class and utils."""
 from datetime import datetime
 
-from sqlalchemy import func, Integer, DateTime
+from sqlalchemy import func, String, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.db import Base
@@ -20,10 +20,10 @@ class CustomBase(Base):
 
     def __repr__(self):
         attrs = ", ".join(
-            f"{field}: {getattr(self, field)}"
-            for field in self.__repr_fields__
+            f"{field}: {getattr(self, field)}" for field in self.__repr_fields__
         )
         return f"{self.__class__.__name__}({attrs})"
+
 
 class CreateTimestampMixin(CustomBase):
     """
@@ -35,3 +35,17 @@ class CreateTimestampMixin(CustomBase):
     __abstract__ = True
 
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class ImageMixin(CustomBase):
+    """Mixin for adding image to the model"""
+
+    __abstract__ = True
+
+    image_url: Mapped[str] = mapped_column(String, nullable=True)
+
+    def __str__(self):
+        return self.image_url
+
+    def __repr__(self):
+        return self.image_url

@@ -37,7 +37,25 @@ class PropertyService:
             "properties": properties,
             "total_pages": total_pages,
         }
-    
+
+    async def get_properties_by_agent_page(
+            self,
+            agent_id: int,
+            page: int,
+            elements: int,
+            ) -> Dict[str, Any]:
+        """Get properties by agent page"""
+        offset = (page - 1) * elements
+        properties = await self.propertyRepository.get_properties_page_by(
+            limit=elements, offset=offset, owner_id=agent_id)
+        count = await self.propertyRepository.get_properties_page_by_count(
+            owner_id=agent_id)
+        total_pages = (count - 1) // elements + 1
+        return {
+            "properties": properties,
+            "total_pages": total_pages,
+        }
+
     async def get_map_locations(
             self,
             ) -> Sequence[Location]:
