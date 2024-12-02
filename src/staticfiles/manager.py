@@ -1,4 +1,4 @@
-import os, io, uuid
+import os, io, uuid, logging
 from typing import Optional
 from abc import ABC, abstractmethod
 
@@ -101,23 +101,32 @@ class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
         if file.content_type not in self.ALLOWED_IMAGE_TYPES:
             raise exceptions.UnsupportedFileType
 
-    def _process_image(self, file: UploadFile) -> UploadFile:
+    async def _process_image(self, file: UploadFile) -> UploadFile:
         """Process image if needed (e.g., resize or convert format)"""
         if file.content_type.startswith("image/"):
             try:
-                image = Image.open(file.file)
+                logging.debug(f"Processing image: {file.filename}")
+                contents = await file.read()
+                logging.debug(f"File contents length: {len(contents)}")
+                image = Image.open(io.BytesIO(contents))
                 image.thumbnail(self.MAX_IMAGE_SIZE_PX)
-
+                logging.debug(f"Image size: {image.size}")
                 buffer = io.BytesIO()
+                logging.debug(f"Saving image as WEBP")
                 image.save(buffer, format="WEBP", quality=85)
+                logging.debug(f"Image saved as WEBP")
                 buffer.seek(0)
+                logging.debug(f"Buffer size: {len(buffer.getvalue())}")
 
                 file = UploadFile(
                     filename=file.filename.rsplit('.', 1)[0] + ".webp",
-                    file=buffer,
-                    content_type="image/webp"
+                    file=buffer
                 )
-            except Exception:
+                logging.debug(f"Image processed: {file.filename}")
+
+            except Exception as e:
+                logging.error(f"Error processing image: {file.filename}")
+                logging.error(e)
                 raise exceptions.ImageProcessingError
         return file
 
@@ -134,13 +143,13 @@ class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
         except Exception as e:
             raise exceptions.FileUploadError(f"Error getting file from S3: {e}")
 
-    def upload(self, file: UploadFile) -> str:
+    async def upload(self, file: UploadFile) -> str:
         """Upload file to S3, ensuring unique filenames and applying validation/processing
         
         returns: S3 URL of the uploaded file
         """
         self._validate_file(file)
-        file = self._process_image(file)
+        file = await self._process_image(file)
 
         unique_filename = self._generate_unique_filename(file.filename)
         file_path = f"uploads/{unique_filename}"
@@ -150,7 +159,7 @@ class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
                 self.AWS_BUCKET_NAME,
                 file_path,
                 )
-            return "https://%s.s3.%s.amazonaws.com/%s".format(
+            return "https://{}.s3.{}.amazonaws.com/{}".format(
                 self.AWS_BUCKET_NAME, self.AWS_REGION, file_path
             )
         except Exception as e:

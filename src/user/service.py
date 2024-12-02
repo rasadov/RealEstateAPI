@@ -42,6 +42,7 @@ class UserService:
             ) -> dict:
         """Forgot password"""
         user = await self.userRepository.get_user_by(email=email)
+        print(user)
         if user is None:
             raise exceptions.UserNotFound
 
@@ -49,9 +50,8 @@ class UserService:
         send_email(
             email,
             "Forgot password",
-            f"Click on the link to reset your password: /reset-password?token={token}"
+            f"Click on the link to reset your password: /reset-password?token={token}",   
         )
-
         return {"detail": "Email sent with password reset instructions"}
 
     async def reset_password(
@@ -110,3 +110,40 @@ class UserService:
         await self.userRepository.commit()
 
         return {"detail": "Email confirmed successfully"}
+    
+    async def update_user(
+            self,
+            id: int,
+            payload: dict,
+            ) -> dict:
+        """Update user"""
+        user = await self.userRepository.get_or_401(id)
+        user.update_user(payload)
+        await self.userRepository.commit()
+
+        return {"detail": "User updated successfully"}
+
+    async def update_agent(
+            self,
+            id: int,
+            payload: dict,
+            ) -> dict:
+        """Update agent"""
+        user = await self.userRepository.get_agent_or_401(id)
+        user.update_agent(payload)
+        await self.userRepository.commit()
+        
+        return {"detail": "Agent updated successfully"}
+
+    async def delete_user(
+            self,
+            current_user_id: int,
+            ) -> dict:
+        """Delete user"""
+        current_user = await self.userRepository.get_or_401(current_user_id)
+
+        await self.userRepository.delete(current_user)
+        await self.userRepository.commit()
+        return {
+            "detail": "User deleted successfully"
+            }

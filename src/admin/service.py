@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Dict, Sequence
 
 from src.user.repository import UserRepository
 from src.user.models import User
@@ -52,7 +52,7 @@ class AdminService:
             self,
             token: TokenData,
             property_id: int,
-            ) -> Property:
+            ) -> Dict[str, str]:
         """Delete property."""
         user_obj = await self.user_repository.get_or_401(token.user_id)
         level = user_obj.level
@@ -60,8 +60,8 @@ class AdminService:
         if level < 1:
             raise exceptions.Unauthorized
 
-        await self.property_repository.get_or_404(property_id)
-        await self.property_repository.admin_delete_property(property_id)
+        prop = await self.property_repository.get_or_404(property_id)
+        await self.property_repository.admin_delete_property(prop)
         return {
             "detail": "Property deleted",
         }

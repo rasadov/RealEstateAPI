@@ -13,7 +13,7 @@ redis_url = os.getenv('REDIS_URL', 'redis://redis:6379/0')
 celery_app = Celery('tasks', broker=redis_url)
 
 @celery_app.task
-def delete_property_images(id: int):
+def queue_delete_property(id: int):
     db: Session = get_sync_db_session()
     property: Property = db.query(Property).get(id)
     if property is None:
@@ -22,5 +22,6 @@ def delete_property_images(id: int):
     for image in property.images:
         static_files_manager.delete(image.image_url)
     db.query(PropertyImage).filter(PropertyImage.property_id == id).delete()
+    db.delete(property)
     db.commit()
     db.close()

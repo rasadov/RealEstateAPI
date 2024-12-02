@@ -5,18 +5,19 @@ from email.mime.text import MIMEText
 
 from src.config import Settings
 
-def send_email(email: str, subject: str, body: str, sender: str = None) -> None:
+def send_email(recipient: str, subject: str, body: str, sender: str = Settings.SMTP_USER) -> None:
     """
     Sends an email to the specified email address.
     """
     message = MIMEText(body)
     message["Subject"] = subject
-    message["From"] = sender or Settings.EMAIL_SENDER
-    message["To"] = email
+    message["From"] = sender
+    message["To"] = recipient
 
     with smtplib.SMTP_SSL(Settings.SMTP_SERVER, Settings.SMTP_PORT) as server:
         server.login(Settings.SMTP_USER, Settings.SMTP_PASSWORD)
-        server.sendmail(Settings.EMAIL_SENDER, [email], message.as_string())
+        server.sendmail(sender, [recipient], message.as_string())
+
 
 def send_email_verification(email: str, token: str) -> None:
     """

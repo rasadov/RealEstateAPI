@@ -62,3 +62,34 @@ async def confirm_email(
         token,
         payload.get("password"),
         )
+
+@router.patch("/update/user")
+async def update_user(
+    payload: dict,
+    user: TokenData = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service)
+    ):
+    return await user_service.update_user(
+        user.user_id,
+        payload,
+        )
+
+@router.patch("/update/agent")
+async def update_agent(
+    payload: dict,
+    user: TokenData = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service)
+    ):
+    return await user_service.update_agent(
+        user.user_id,
+        payload,
+        )
+
+@router.delete("/delete")
+async def delete_user(
+    user: TokenData = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service)
+    ):
+    return await user_service.delete_user(
+        user.user_id,
+        )

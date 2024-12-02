@@ -13,3 +13,10 @@ class PropertyImageNotFound(HTTPException):
             status_code=404,
             detail="Property image not found",
         )
+
+class PropertyImagesLimitExceeded(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=400,
+            detail="Property images limit exceeded",
+        )

@@ -24,12 +24,26 @@ class User(CreateTimestampMixin):
     role: Mapped[str] = mapped_column(String, nullable=True, default="buyer")
     level: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
+    agent: Mapped["Agent"] = relationship("Agent", uselist=False, back_populates="user")
     image: Mapped["UserProfileImage"] = relationship(
-        "UserProfileImage", uselist=False, backref="user"
+        "UserProfileImage", uselist=False, back_populates="user"
     )
     approvals: Mapped[list["Approval"]] = relationship(
         "Approval", back_populates="user"
     )
+
+    @property
+    def image_url(self) -> str:
+        """Get user image url"""
+        return self.image.image_url if self.image else None
+    
+    def update_user(self, payload) -> None:
+        """Update user"""
+        for key, value in payload.items():
+            if key in ("name", "phone", "bio"):
+                setattr(self, key, value)
+            else:
+                raise ValueError(f"Invalid key: {key}")
 
     def verify_password(self, password: str) -> bool:
         """Verify user password"""
@@ -53,7 +67,7 @@ class UserProfileImage(ImageMixin):
         Integer, ForeignKey("UserModel.id"), nullable=False
     )
 
-    user: Mapped["User"] = relationship("User", back_populates="images")
+    user: Mapped["User"] = relationship("User", back_populates="image")
 
 
 class Agent(CustomBase):
@@ -67,7 +81,7 @@ class Agent(CustomBase):
     serial_number: Mapped[str] = mapped_column(String, nullable=False)
     company: Mapped[str] = mapped_column(String, nullable=True)
 
-    user: Mapped["User"] = relationship("User")
+    user: Mapped["User"] = relationship("User", back_populates="agent")
     properties: Mapped[list["Property"]] = relationship(
         "Property", back_populates="owner"
     )
@@ -76,6 +90,16 @@ class Agent(CustomBase):
         """Initialize agent"""
         self.user_id = user_id
         self.serial_number = serial_number
+    
+    def update_agent(self, payload) -> None:
+        """Update agent"""
+        for key, value in payload.items():
+            if key in ("serial_number", "company"):
+                setattr(self, key, value)
+            elif key in ("name", "phone", "bio"):
+                setattr(self.user, key, value)
+            else:
+                raise ValueError(f"Invalid key: {key}")
 
 
 class Approval(CreateTimestampMixin):

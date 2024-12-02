@@ -41,7 +41,6 @@ class Settings:
     SMTP_PORT = os.getenv("SMTP_PORT")
     SMTP_USER = os.getenv("SMTP_USER")
     SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-    EMAIL_SENDER = os.getenv("EMAIL_SENDER")
 
 class S3Settings:
     """S3 configuration."""

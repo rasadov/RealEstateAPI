@@ -3,11 +3,12 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 from sqlalchemy.future import select
 
 from src.base.repository import BaseRepository
 from src.staticfiles.manager import BaseStaticFilesManager
-from src.user.models import User
+from src.user.models import User, Agent
 from src.auth import exceptions
 
 
@@ -24,6 +25,17 @@ class UserRepository(BaseRepository[User]):
         """Get user by any field"""
         result = await self.session.execute(
             select(User).filter_by(
+                **kwargs
+                ))
+        return result.scalars().first()
+    
+    async def get_agent_by(
+            self,
+            **kwargs,
+            ) -> Agent:
+        """Get agent by any field"""
+        result = await self.session.execute(
+            select(Agent).options(joinedload(Agent.user)).filter_by(
                 **kwargs
                 ))
         return result.scalars().first()
@@ -48,8 +60,25 @@ class UserRepository(BaseRepository[User]):
             ) -> User:
         """Get user by id or raise 401"""
         result = await self.session.execute(
-            select(User).filter(
+            select(User).options(
+                joinedload(User.agent)
+            ).filter(
                 User.id == user_id
+                ))
+        user = result.scalars().first()
+        if not user:
+            raise exceptions.Unauthorized
+        return user
+
+    async def get_agent_or_401(
+            self,
+            user_id: int,
+            ) -> Agent:
+        """Get agent by id or raise 401"""
+        result = await self.session.execute(
+            select(User).filter(
+                User.id == user_id,
+                User.role == "agent"
                 ))
         user = result.scalars().first()
         if not user:
