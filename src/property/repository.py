@@ -155,10 +155,13 @@ class PropertyRepository(BaseRepository[Property]):
             joinedload(Property.images),
             joinedload(Property.location),
             joinedload(Property.info)
-            ).
-            filter(**kwargs).
-            order_by(Property.created_at.desc()).
-            limit(limit).offset(offset)
+            )
+            .filter_by(**kwargs)
+            .order_by(
+                Property.created_at.desc()
+            )
+            .limit(limit)
+            .offset(offset)
         )
         return result.scalars().unique().all()
 
@@ -169,13 +172,11 @@ class PropertyRepository(BaseRepository[Property]):
         """Get properties page count"""
         result = await self.session.execute(
             select(func.count(Property.id)).
-            filter(
-                and_(
-                Property.is_active == True, 
-                Property.is_sold == False,
-                Property.approved == True,
+            filter_by(
+                is_active = True, 
+                is_sold = False,
+                approved = True,
                 **kwargs
-                )
             )
         )
         return result.scalar()
@@ -330,20 +331,19 @@ class PropertyRepository(BaseRepository[Property]):
             ) -> None:
         """Delete image from property"""
         image = await self._get_property_image(image_id)
-        await self.staticFilesManager.delete(image.image_url)
-        self.delete(image_id)
+        self.staticFilesManager.delete(image.image_url)
+        await self.delete(image)
         await self.commit()
 
     async def delete_property(
             self,
             property_id: int,
-            sold: bool,
+            is_sold: bool,
             ) -> None:
         """Delete property"""
         property = await self.get_or_404(property_id)
 
-        if sold:
-            property.is_sold = True
+        property.is_sold = is_sold
         await self.commit()
 
         queue_delete_property.delay(property_id)

@@ -7,7 +7,7 @@ from src.base.models import CustomBase, CreateTimestampMixin, ImageMixin
 from src.auth import utils
 
 if TYPE_CHECKING:
-    from src.property.models import Property
+    from src.property.models import Property, Listing
 
 
 class User(CreateTimestampMixin):
@@ -85,6 +85,7 @@ class Agent(CustomBase):
     properties: Mapped[list["Property"]] = relationship(
         "Property", back_populates="owner"
     )
+    listings: Mapped[list["Listing"]] = relationship("Listing", back_populates="agent")
 
     def __init__(self, user_id: int, serial_number: str) -> None:
         """Initialize agent"""

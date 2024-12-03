@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from src.celery.db_celery import get_sync_db_session
 from src.staticfiles.dependencies import get_static_files_manager
 from src.property.models import Property, PropertyImage
+from src.user.models import Agent
 
 # Get the Redis URL from the environment variable
 redis_url = os.getenv('REDIS_URL', 'redis://redis:6379/0')

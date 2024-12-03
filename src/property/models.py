@@ -21,7 +21,9 @@ class Listing(CustomBase):
         Integer, ForeignKey("AgentModel.id"), nullable=False
     )
 
-    properties: Mapped[list["Property"]] = relationship("Property")
+    properties: Mapped[list["Property"]] = relationship(
+        "Property", cascade="all, delete-orphan"
+        )
     agent: Mapped["Agent"] = relationship("Agent")
 
 
@@ -44,15 +46,16 @@ class Property(CreateTimestampMixin):
     )
 
     location: Mapped["Location"] = relationship(
-        "Location", uselist=False, backref="property"
+        "Location", uselist=False, backref="property", cascade="all, delete-orphan"
     )
     owner: Mapped["Agent"] = relationship("Agent", back_populates="properties")
     images: Mapped[list["PropertyImage"]] = relationship(
-        "PropertyImage", back_populates="property"
+        "PropertyImage", back_populates="property", cascade="all, delete-orphan"
     )
     info: Mapped["PropertyInfo"] = relationship(
-        "PropertyInfo", uselist=False, backref="property"
+        "PropertyInfo", uselist=False, backref="property", cascade="all, delete-orphan"
     )
+    listing: Mapped["Listing"] = relationship("Listing", back_populates="properties")
 
     def approve(self) -> None:
         self.approved = True

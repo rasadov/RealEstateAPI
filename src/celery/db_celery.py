@@ -21,6 +21,7 @@ def get_sync_db_session():
     """Dependency to provide a synchronous session for database operations."""
     db = SessionLocal()
     try:
-        yield db
-    finally:
+        return db
+    except Exception as e:
         db.close()
+        raise e

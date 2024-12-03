@@ -17,6 +17,85 @@ client_response = login_or_register_user(TEST_CLIENT_EMAIL, TEST_CLIENT_PASS)
 agent_response = login_or_register_agent(TEST_AGENT_EMAIL, TEST_AGENT_PASS)
 moderator_response = login_or_register_user(TEST_MODERATOR_EMAIL, TEST_MODERATOR_PASS)
 
+
+# GET METHODS
+
+@pytest.mark.asyncio
+async def test_property_search():
+    params = {
+        "page": "1",
+        "elements": "10"
+    }
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "http://localhost:8000/api/v1/property/",
+            params=params,
+            headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+            }
+        )
+
+    print("TEST PROPERTY SEARCH")
+    print(response.json())
+    assert response.status_code == 200
+
+@pytest.mark.asyncio
+async def test_property_search_2():
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "http://localhost:8000/api/v1/property/",
+        )
+
+    print("TEST PROPERTY SEARCH")
+    print(response.json())
+    assert response.status_code == 200
+
+@pytest.mark.asyncio
+async def test_property_search_by_id():
+    property_id = 19
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"http://localhost:8000/api/v1/property/{property_id}",
+        )
+    
+    print("TEST PROPERTY SEARCH BY ID")
+    print(response.json())
+    assert response.status_code == 200
+
+@pytest.mark.asyncio
+async def test_property_search_by_agent():
+    agent_id = 1
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"http://localhost:8000/api/v1/property/agent/{agent_id}/page",
+        )
+
+    print("TEST PROPERTY SEARCH BY AGENT")
+    # print(response.json())
+    assert response.status_code == 200
+
+@pytest.mark.asyncio
+async def test_property_search_by_agent_2():
+    agent_id = 1
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"http://localhost:8000/api/v1/property/agent/{agent_id}/page",
+            params={
+            "page": "1",
+            "elements": "10"
+            }
+        )
+
+    print("TEST PROPERTY SEARCH BY AGENT")
+    # print(response.json())
+    assert response.status_code == 200
+
+# POST METHODS
+
 @pytest.mark.asyncio
 async def test_property_creation():
     images = generate_images_as_bytes(5)
@@ -62,47 +141,11 @@ async def test_property_creation():
     assert response.status_code == 200
 
 @pytest.mark.asyncio
-async def test_property_update():
-    access_token = agent_response.cookies["access_token"]
-    refresh_token = agent_response.cookies["refresh_token"]
-    
-    response = httpx.put(
-        "http://localhost:8000/api/v1/property/19",
-        json={
-            "name": "test_property_2",
-            "description": "test_description_2",
-            "price": 100000.0,
-            "location" : {
-            "latitude": 0.0,
-            "longitude": 0.0,
-            },
-            "info": {
-            "category": "house",
-            "total_area": 200.0,
-            "living_area": 60.0,
-            "bedrooms": 4,
-            "living_rooms": 3,
-            "floors": 1,
-            "district": "test_district_2",
-            "address": "test_address_2"
-            }
-        },
-        headers={
-            "Authorization": f"Bearer {access_token}",
-            "Accept": "application/json"
-        },
-        cookies={
-            "refresh_token": refresh_token,
-            "access_token": access_token
-        }
-    )
-
-    assert response.status_code == 200
-
-@pytest.mark.asyncio
 async def test_adding_image_to_property():
     access_token = agent_response.cookies["access_token"]
     refresh_token = agent_response.cookies["refresh_token"]
+
+    property_id = 19
 
     # Generate images
     images = generate_images_as_bytes(1)
@@ -110,7 +153,7 @@ async def test_adding_image_to_property():
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            "http://localhost:8000/api/v1/property/image/19",
+            f"http://localhost:8000/api/v1/property/image/{property_id}",
             files=files,
             headers={
                 "Authorization": f"Bearer {access_token}",
@@ -128,13 +171,15 @@ async def test_adding_image_to_property_2():
     access_token = agent_response.cookies["access_token"]
     refresh_token = agent_response.cookies["refresh_token"]
 
+    property_id = 19
+
     # Generate images
     images = generate_images_as_bytes(5)
     files = [("files", (f"image_{i}.png", image, "image/png")) for i, image in enumerate(images)]
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            "http://localhost:8000/api/v1/property/image/19",
+            f"http://localhost:8000/api/v1/property/image/{property_id}",
             files=files,
             headers={
                 "Authorization": f"Bearer {access_token}",
@@ -147,96 +192,113 @@ async def test_adding_image_to_property_2():
 
     assert response.status_code == 400
 
-# @pytest.mark.asyncio
-# async def test_property_deletion():
-#     property_id = 2
-
-#     access_token = agent_response.cookies["access_token"]
-#     refresh_token = agent_response.cookies["refresh_token"]
-
-#     async with httpx.AsyncClient() as client:
-#         response = await client.delete(
-#             f"http://localhost:8000/api/v1/property/{property_id}",
-#             headers={
-#                 "Authorization": f"Bearer {access_token}",
-#             },
-#             cookies={
-#                 "refresh_token": refresh_token,
-#                 "access_token": access_token
-#             }
-#         )
-
-#     assert response.status_code == 200
+# PUT METHODS
 
 @pytest.mark.asyncio
-async def test_property_search():
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
-            "http://localhost:8000/api/v1/property/",
-            params={
-            "page": "1",
-            "elements": "10"
+async def test_property_update():
+    access_token = agent_response.cookies["access_token"]
+    refresh_token = agent_response.cookies["refresh_token"]
+
+    property_id = 19
+
+    new_data = {
+            "name": "test_property_2",
+            "description": "test_description_2",
+            "price": 100000.0,
+            "location" : {
+            "latitude": 0.0,
+            "longitude": 0.0,
             },
-            headers={
-            "Accept": "application/json",
-            "Content-Type": "application/json"
+            "info": {
+            "category": "house",
+            "total_area": 200.0,
+            "living_area": 60.0,
+            "bedrooms": 4,
+            "living_rooms": 3,
+            "floors": 1,
+            "district": "test_district_2",
+            "address": "test_address_2"
             }
+        }
+
+    response = httpx.put(
+        f"http://localhost:8000/api/v1/property/{property_id}",
+        json=new_data,
+        headers={
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json"
+        },
+        cookies={
+            "refresh_token": refresh_token,
+            "access_token": access_token
+        }
+    )
+
+    assert response.status_code == 200
+
+# DELETE METHODS
+
+@pytest.mark.asyncio
+async def test_property_deletion():
+    property_id = 2
+
+    access_token = agent_response.cookies["access_token"]
+    refresh_token = agent_response.cookies["refresh_token"]
+
+    async with httpx.AsyncClient() as client:
+        response = await client.delete(
+            f"http://localhost:8000/api/v1/property/{property_id}",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+            },
+            cookies={
+                "refresh_token": refresh_token,
+                "access_token": access_token
+            }, params={"is_sold": "true"}
         )
 
-    print("TEST PROPERTY SEARCH")
-    print(response.json())
+    assert response.status_code == 404
+
+@pytest.mark.asyncio
+async def test_property_deletion():
+    property_id = 22
+
+    access_token = agent_response.cookies["access_token"]
+    refresh_token = agent_response.cookies["refresh_token"]
+
+    async with httpx.AsyncClient() as client:
+        response = await client.delete(
+            f"http://localhost:8000/api/v1/property/{property_id}",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+            },
+            cookies={
+                "refresh_token": refresh_token,
+                "access_token": access_token
+            }, params={"is_sold": "true"}
+        )
+
     assert response.status_code == 200
 
 @pytest.mark.asyncio
-async def test_property_search_2():
+async def test_image_deletion():
+    image_id = 93
+    property_id = 19
+
+    access_token = agent_response.cookies["access_token"]
+    refresh_token = agent_response.cookies["refresh_token"]
+
     async with httpx.AsyncClient() as client:
-        response = await client.get(
-            "http://localhost:8000/api/v1/property/",
+        response = await client.delete(
+            f"http://localhost:8000/api/v1/property/{property_id}/image/{image_id}",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+            },
+            cookies={
+                "refresh_token": refresh_token,
+                "access_token": access_token
+            },
         )
 
-    print("TEST PROPERTY SEARCH")
-    print(response.json())
     assert response.status_code == 200
-
-# @pytest.mark.asyncio
-# async def test_property_search_by_id():
-#     property_id = 19
-
-#     async with httpx.AsyncClient() as client:
-#         response = await client.get(
-#             f"http://localhost:8000/api/v1/property/{property_id}",
-#         )
-    
-#     print("TEST PROPERTY SEARCH BY ID")
-#     print(response.json())
-#     assert response.status_code == 200
-
-# @pytest.mark.asyncio
-# async def test_property_search_by_agent():
-#     agent_id = 1
-
-#     async with httpx.AsyncClient() as client:
-#         response = await client.get(
-#             f"http://localhost:8000/api/v1/property/agent/{agent_id}/page",
-#         )
-
-#     print("TEST PROPERTY SEARCH BY AGENT")
-#     # print(response.json())
-#     assert response.status_code == 200
-
-# @pytest.mark.asyncio
-# async def test_property_search_by_agent_2():
-#     agent_id = 1
-
-#     async with httpx.AsyncClient() as client:
-#         response = await client.get(
-#             f"http://localhost:8000/api/v1/property/agent/{agent_id}/page",
-#             params={
-#             "page": "1",
-#             "elements": "10"
-#             }
-#         )
-
-#     print("TEST PROPERTY SEARCH BY AGENT")
-#     # print(response.json())
-#     assert response.status_code == 200
+                
