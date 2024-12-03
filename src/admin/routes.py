@@ -28,15 +28,6 @@ async def get_agents(
     ):
     return await admin_service.get_users_page(current_user, page, elements, role="agent")
 
-@router.get("/users/agent")
-async def get_agents(
-    page: int,
-    elements: int,
-    admin_service: AdminService = Depends(get_admin_service),
-    current_user: TokenData = Depends(get_current_user)
-    ):
-    return await admin_service.get_users_page(current_user, page, elements, role="buyer")
-
 @router.get("/properties/unapproved")
 async def get_unapproved_properties(
     page: int,

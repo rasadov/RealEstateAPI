@@ -36,7 +36,8 @@ def upgrade():
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('serial_number', sa.String(), nullable=False),
     sa.Column('company', sa.String(), nullable=True),
-    sa.ForeignKeyConstraint(['user_id'], ['UserModel.id'], ),
+    sa.Column('experience', sa.Float(), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['UserModel.id'],),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('ListingModel',

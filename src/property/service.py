@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Any, Sequence
+from typing import Sequence
 
 from fastapi import UploadFile
 
@@ -41,7 +41,7 @@ class PropertyService:
             self,
             page: int,
             elements: int,
-            ) -> Dict[str, int | Sequence]:
+            ) -> dict[str, int | Sequence]:
         """Get properties page"""
         offset = (page - 1) * elements
         properties = await self.property_repository.get_properties_page(
@@ -58,7 +58,7 @@ class PropertyService:
             agent_id: int,
             page: int,
             elements: int,
-            ) -> Dict[str, int | Sequence]:
+            ) -> dict[str, int | Sequence]:
         """Get properties by agent page"""
         offset = (page - 1) * elements
         properties = await self.property_repository.get_properties_page_by(

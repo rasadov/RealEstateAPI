@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, String, Boolean
+from sqlalchemy import Float, ForeignKey, Integer, String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.base.models import CustomBase, CreateTimestampMixin, ImageMixin
@@ -37,7 +37,7 @@ class User(CreateTimestampMixin):
         """Get user image url"""
         return self.image.image_url if self.image else None
     
-    def update_user(self, payload) -> None:
+    def update_user(self, payload: dict) -> None:
         """Update user"""
         for key, value in payload.items():
             if key in ("name", "phone", "bio"):
@@ -80,7 +80,7 @@ class Agent(CustomBase):
     )
     serial_number: Mapped[str] = mapped_column(String, nullable=False)
     company: Mapped[str] = mapped_column(String, nullable=True)
-
+    experience: Mapped[float] = mapped_column(Float, nullable=True)
     user: Mapped["User"] = relationship("User", back_populates="agent")
     properties: Mapped[list["Property"]] = relationship(
         "Property", back_populates="owner"
@@ -92,7 +92,7 @@ class Agent(CustomBase):
         self.user_id = user_id
         self.serial_number = serial_number
     
-    def update_agent(self, payload) -> None:
+    def update_agent(self, payload: dict) -> None:
         """Update agent"""
         for key, value in payload.items():
             if key in ("serial_number", "company"):

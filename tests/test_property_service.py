@@ -301,4 +301,3 @@ async def test_image_deletion():
         )
 
     assert response.status_code == 200
-                

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Form, UploadFile, File, Request, Query
+from fastapi import APIRouter, Depends, UploadFile, File, Query
 from typing import Optional
 
 from src.property.service import PropertyService
