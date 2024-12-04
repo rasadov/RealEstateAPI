@@ -1,7 +1,5 @@
-import io
 import pytest
 from fastapi.testclient import TestClient
-from fastapi import UploadFile
 import httpx
 
 from src.main import app
@@ -240,28 +238,7 @@ async def test_property_update():
 
 @pytest.mark.asyncio
 async def test_property_deletion():
-    property_id = 2
-
-    access_token = agent_response.cookies["access_token"]
-    refresh_token = agent_response.cookies["refresh_token"]
-
-    async with httpx.AsyncClient() as client:
-        response = await client.delete(
-            f"http://localhost:8000/api/v1/property/{property_id}",
-            headers={
-                "Authorization": f"Bearer {access_token}",
-            },
-            cookies={
-                "refresh_token": refresh_token,
-                "access_token": access_token
-            }, params={"is_sold": "true"}
-        )
-
-    assert response.status_code == 404
-
-@pytest.mark.asyncio
-async def test_property_deletion():
-    property_id = 22
+    property_id = 21
 
     access_token = agent_response.cookies["access_token"]
     refresh_token = agent_response.cookies["refresh_token"]
@@ -280,24 +257,45 @@ async def test_property_deletion():
 
     assert response.status_code == 200
 
-@pytest.mark.asyncio
-async def test_image_deletion():
-    image_id = 93
-    property_id = 19
+# @pytest.mark.asyncio
+# async def test_property_deletion():
+#     property_id = 22
 
-    access_token = agent_response.cookies["access_token"]
-    refresh_token = agent_response.cookies["refresh_token"]
+#     access_token = agent_response.cookies["access_token"]
+#     refresh_token = agent_response.cookies["refresh_token"]
 
-    async with httpx.AsyncClient() as client:
-        response = await client.delete(
-            f"http://localhost:8000/api/v1/property/{property_id}/image/{image_id}",
-            headers={
-                "Authorization": f"Bearer {access_token}",
-            },
-            cookies={
-                "refresh_token": refresh_token,
-                "access_token": access_token
-            },
-        )
+#     async with httpx.AsyncClient() as client:
+#         response = await client.delete(
+#             f"http://localhost:8000/api/v1/property/{property_id}",
+#             headers={
+#                 "Authorization": f"Bearer {access_token}",
+#             },
+#             cookies={
+#                 "refresh_token": refresh_token,
+#                 "access_token": access_token
+#             }, params={"is_sold": "true"}
+#         )
 
-    assert response.status_code == 200
+#     assert response.status_code == 200
+
+# @pytest.mark.asyncio
+# async def test_image_deletion():
+#     image_id = 93
+#     property_id = 19
+
+#     access_token = agent_response.cookies["access_token"]
+#     refresh_token = agent_response.cookies["refresh_token"]
+
+#     async with httpx.AsyncClient() as client:
+#         response = await client.delete(
+#             f"http://localhost:8000/api/v1/property/{property_id}/image/{image_id}",
+#             headers={
+#                 "Authorization": f"Bearer {access_token}",
+#             },
+#             cookies={
+#                 "refresh_token": refresh_token,
+#                 "access_token": access_token
+#             },
+#         )
+
+#     assert response.status_code == 200

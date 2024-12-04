@@ -1,9 +1,11 @@
 import os, io, uuid, logging
+from urllib.parse import urlparse
 from typing import Optional
 from abc import ABC, abstractmethod
 
 import boto3
 from PIL import Image
+import boto3.s3
 from fastapi import UploadFile
 
 import src.staticfiles.exceptions as exceptions
@@ -165,13 +167,17 @@ class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
         except Exception as e:
             raise exceptions.FileUploadError(f"Error uploading file to S3: {e}")
 
-    def delete(self, file_path: str) -> None:
+    def delete(self, image_url: str) -> None:
         """Delete file from S3"""
         try:
-            self.s3_client.delete_object(
+            parsed_url = urlparse(image_url)
+            file_path = parsed_url.path.lstrip('/')
+
+            response = self.s3_client.delete_object(
                 Bucket=self.AWS_BUCKET_NAME,
                 Key=file_path,
                 )
+            print(response)
             print(f"Deleted {file_path} from S3")
         except Exception as e:
             raise exceptions.FileDeleteError(f"Error deleting file from S3: {e}")

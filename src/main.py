@@ -1,5 +1,5 @@
 import logging
-from fastapi import FastAPI, Response
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
@@ -25,17 +25,6 @@ async def lifespan(app: FastAPI):
         await close_database()
 
 app.router.lifespan_context = lifespan
-
-# from fastapi import Request
-
-# @app.middleware("http")
-# async def log_requests(request: Request, call_next):
-#     logging.info(f"Request: {request.method} {request.url}")
-#     logging.info(request.form())
-#     logging.info(request.values())
-#     response = await call_next(request)
-#     logging.info(f"Response status: {response.status_code}")
-#     return response
 
 app.add_middleware(
     CORSMiddleware,

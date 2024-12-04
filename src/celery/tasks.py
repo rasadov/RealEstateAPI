@@ -17,10 +17,12 @@ celery_app = Celery('tasks', broker=redis_url)
 def queue_delete_property(id: int):
     db: Session = get_sync_db_session()
     property: Property = db.query(Property).get(id)
+    static_files_manager = get_static_files_manager()
+
     if property is None:
         return
-    static_files_manager = get_static_files_manager()
     for image in property.images:
+        print(f"Deleting image: {image.image_url}")
         static_files_manager.delete(image.image_url)
     db.query(PropertyImage).filter(PropertyImage.property_id == id).delete()
     db.delete(property)

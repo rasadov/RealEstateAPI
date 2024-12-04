@@ -80,7 +80,7 @@ class Agent(CustomBase):
     )
     serial_number: Mapped[str] = mapped_column(String, nullable=False)
     company: Mapped[str] = mapped_column(String, nullable=True)
-    experience: Mapped[float] = mapped_column(Float, nullable=True)
+    # experience: Mapped[float] = mapped_column(Float, nullable=True)
     user: Mapped["User"] = relationship("User", back_populates="agent")
     properties: Mapped[list["Property"]] = relationship(
         "Property", back_populates="owner"
