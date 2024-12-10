@@ -5,13 +5,21 @@ from src.property.service import PropertyService
 from src.property.dependencies import get_property_service, create_property_form
 from src.auth.dependencies import get_current_user, get_current_user_optional
 from src.auth.schemas import TokenData
-from src.property.schemas import CreatePropertySchema
+from src.property.schemas import CreatePropertySchema, SearchPropertySchema
 
 
 router = APIRouter(
     prefix="/api/v1/property",
     tags=["Property"]
 )
+
+@router.get("/")
+async def get_properties_page(
+    schema: SearchPropertySchema = Depends(SearchPropertySchema),
+    property_service: PropertyService = Depends(get_property_service)
+    ):
+    return await property_service.get_properties_page(
+        schema)
 
 @router.get("/{id}")
 async def get_property_by_id(
@@ -26,16 +34,6 @@ async def get_map_locations(
     property_service: PropertyService = Depends(get_property_service)
     ):
     return await property_service.get_map_locations()
-
-@router.get("/")
-async def get_properties_page(
-    page: int = Query(1),
-    elements: int = Query(10),
-    property_service: PropertyService = Depends(get_property_service)
-    ):
-    print("HERE IS THE PAGE", page)
-    return await property_service.get_properties_page(
-        page, elements)
 
 @router.get("/agent/{agent_id}/page")
 async def get_properties_by_agent_page(
@@ -53,7 +51,7 @@ async def create_property(
     files: list[UploadFile] = File(...),
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
-):
+    ):
     return await property_service.create_property(
         payload, files, user.user_id
     )

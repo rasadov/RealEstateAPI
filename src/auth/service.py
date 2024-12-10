@@ -1,8 +1,8 @@
 from dataclasses import dataclass
+from httpx import AsyncClient
 
 from fastapi.responses import JSONResponse, Response
 from fastapi import Request
-from httpx import AsyncClient
 
 from src.auth.utils import hash_password
 from src.auth import exceptions

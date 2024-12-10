@@ -1,6 +1,8 @@
 import httpx
+
 import pytest
 from fastapi.testclient import TestClient
+
 from src.main import app
 from .utils import generate_register_credentials
 from .config import TEST_AGENT_EMAIL, TEST_AGENT_PASS

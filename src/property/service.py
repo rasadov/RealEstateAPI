@@ -7,7 +7,7 @@ from src.property.repository import PropertyRepository
 from src.user.repository import UserRepository
 from src.auth import exceptions as auth_exceptions
 from src.property.models import Property, Location
-from src.property.schemas import CreatePropertySchema
+from src.property.schemas import CreatePropertySchema, SearchPropertySchema
 from src.auth.schemas import TokenData
 from src.property import exceptions
 
@@ -29,25 +29,23 @@ class PropertyService:
         if not available:
             if current_user:
                 user = await self.user_repository.get_or_401(current_user.user_id)
-                if (
-                    user.level > 0 or
-                    (user.agent and user.agent.id == prop.owner_id)
-                    ):
+                if user.agent and user.agent.id == prop.owner_id:
                     return prop
             raise auth_exceptions.Unauthorized
         return prop
 
     async def get_properties_page(
             self,
-            page: int,
-            elements: int,
+            schema: SearchPropertySchema,
             ) -> dict[str, int | Sequence]:
         """Get properties page"""
-        offset = (page - 1) * elements
+        offset = (schema.page - 1) * schema.elements
+        filters = schema.get_filters()
+
         properties = await self.property_repository.get_properties_page(
-            elements, offset)
+            schema.elements, offset, filters)
         count = await self.property_repository.get_properties_count()
-        total_pages = (count - 1) // elements + 1
+        total_pages = (count - 1) // schema.elements + 1
         return {
             "properties": properties,
             "total_pages": total_pages,
@@ -70,7 +68,7 @@ class PropertyService:
             "properties": properties,
             "total_pages": total_pages,
         }
-    
+
     async def search_properties(
             self,
             query: str,
@@ -153,7 +151,7 @@ class PropertyService:
         agent = await self.user_repository.get_agent_by(user_id=user_id)
         property = await self.property_repository.get_or_404(property_id)
 
-        if agent.user.level < 1 and property.owner_id != agent.id:
+        if property.owner_id != agent.id:
             raise auth_exceptions.Unauthorized
 
         return await self.property_repository.update_property(
@@ -169,7 +167,7 @@ class PropertyService:
         agent = await self.user_repository.get_agent_by(user_id=user_id)
         property = await self.property_repository.get_or_404(property_id)
 
-        if agent.user.level < 1 and property.owner_id != agent.id:
+        if property.owner_id != agent.id:
             raise auth_exceptions.Unauthorized
 
         current_images = await self.property_repository.count_images(property_id)
@@ -189,7 +187,7 @@ class PropertyService:
         agent = await self.user_repository.get_agent_by(user_id=user_id)
         property = await self.property_repository.get_or_404(property_id)
 
-        if agent.user.level < 1 and property.owner_id != agent.id:
+        if property.owner_id != agent.id:
             raise auth_exceptions.Unauthorized
 
         return await self.property_repository.delete_image_from_property(image_id)

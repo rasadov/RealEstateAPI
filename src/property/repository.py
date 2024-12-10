@@ -36,7 +36,7 @@ class PropertyRepository(BaseRepository[Property]):
             )
         )
         return result.scalars().all()
-    
+
     async def search_properties(
             self,
             query: str,
@@ -125,21 +125,48 @@ class PropertyRepository(BaseRepository[Property]):
             self,
             limit: int,
             offset: int,
+            filters: dict[str, tuple],
             ) -> Sequence[Property]:
         """Get properties page"""
+        filter_conditions = [
+            Property.is_active == True,
+            Property.is_sold == False,
+            Property.approved == True,
+        ]
+
+        operator_mapping = {
+            ">=": "__ge__",
+            "<=": "__le__",
+            "==": "__eq__",
+        }
+
+        print(filters)
+
+        for key, (value, attr_path, op) in filters.items():
+            if "." in attr_path:
+                base_attr, related_attr = attr_path.split(".")
+                attr = getattr(getattr(Property, base_attr).property.mapper.class_, related_attr)
+            else:
+                attr = getattr(Property, attr_path)
+            filter_conditions.append(getattr(attr, operator_mapping[op])(value))
+
+
         result = await self.session.execute(
             select(Property).
-            filter(
+            options(
+            joinedload(Property.owner),
+            joinedload(Property.images),
+            joinedload(Property.location),
+            joinedload(Property.info)
+            ).filter(
                 and_(
-                    Property.is_active == True,
-                    Property.is_sold == False,
-                    Property.approved == True,
+                    *filter_conditions
                     )
                 ).order_by(
                     Property.created_at.desc()
                 ).limit(limit).offset(offset)
         )
-        return result.scalars().all()
+        return result.scalars().unique().all()
 
     async def get_properties_page_by(
             self,
