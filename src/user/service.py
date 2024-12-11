@@ -19,6 +19,39 @@ class UserService:
         """Get user by email"""
         user = await self.userRepository.get_user_by(email=email)
         return user
+    
+    async def get_user(
+            self,
+            id: int,
+            ) -> dict:
+        """Get user"""
+        user = await self.userRepository.get_or_401(id)
+        return user.dict()
+    
+    async def get_agent(
+            self,
+            agent_id: int,
+            ) -> dict:
+        """Get agent"""
+        agent = await self.userRepository.get_agent_by_or_404(id=agent_id)
+        return agent.dict()
+
+    async def add_review(
+            self,
+            user_id: int,
+            agent_id: int,
+            rating: int,
+            comment: str,
+            ) -> dict:
+        """Post comment"""
+        user = await self.userRepository.get_or_401(user_id)
+        agent = await self.userRepository.get_agent_by_or_404(user_id=agent_id)
+        if user.id == agent_id:
+            raise exceptions.InvalidReview
+        
+        await self.userRepository.add_review(user, agent, rating, comment)
+        
+        return {"detail": "Comment added successfully"}
 
     async def change_password(
             self,
@@ -28,7 +61,7 @@ class UserService:
             ) -> dict:
         """Change user password"""
         user = await self.userRepository.get_or_401(id)
-        if not user or not user.verify_password(old_password):
+        if not user.verify_password(old_password):
             raise exceptions.InvalidCredentials
 
         user.change_password(new_password)
@@ -50,7 +83,7 @@ class UserService:
         send_email(
             email,
             "Forgot password",
-            f"Click on the link to reset your password: /reset-password?token={token}",   
+            f"Click on the link to reset your password: /reset-password?token={token}",
         )
         return {"detail": "Email sent with password reset instructions"}
 
@@ -129,7 +162,7 @@ class UserService:
             payload: dict,
             ) -> dict:
         """Update agent"""
-        user = await self.userRepository.get_agent_or_401(id)
+        user = await self.userRepository.get_agent_by_or_404(user_id=id)
         user.update_agent(payload)
         await self.userRepository.commit()
         

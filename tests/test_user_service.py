@@ -100,6 +100,27 @@ async def test_agent_update():
     }, cookies=cookies)
 
 @pytest.mark.asyncio
+async def test_agent_update_2():
+    response = httpx.post("http://localhost:8000/api/v1/auth/login", json={
+        "email": TEST_AGENT_EMAIL,
+        "password": TEST_AGENT_PASS
+    })
+
+    assert response.status_code == 200
+
+    cookies = response.cookies
+
+    response = httpx.patch("http://localhost:8000/api/v1/user/update/agent", json={
+        "experience": 5.0
+    }, cookies=cookies)
+
+    assert response.status_code == 200
+
+    response = httpx.post("http://localhost:8000/api/v1/auth/logout", cookies=cookies)
+
+    assert response.status_code == 200
+
+@pytest.mark.asyncio
 async def test_user_deletion():
     email, password = generate_register_credentials()
     response = httpx.post("http://localhost:8000/api/v1/auth/register", json={

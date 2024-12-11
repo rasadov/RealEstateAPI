@@ -76,8 +76,9 @@ class AuthService:
             payload : dict,
             ) -> JSONResponse:
         """Register user"""
-        user_exists = await self.user_service.userRepository.get_user_by(
-            email=payload.get("email"))
+        user_exists = await self.user_service.get_user_by_email(
+            payload.get("email")
+        )
         if user_exists:
             raise exceptions.EmailAlreadyTaken
         if payload.get("role") == "agent" and not payload.get("serial_number"):

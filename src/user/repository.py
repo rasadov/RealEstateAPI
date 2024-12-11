@@ -8,7 +8,7 @@ from sqlalchemy.future import select
 
 from src.base.repository import BaseRepository
 from src.staticfiles.manager import BaseStaticFilesManager
-from src.user.models import User, Agent
+from src.user.models import User, Agent, Review
 from src.auth import exceptions
 
 
@@ -24,18 +24,13 @@ class UserRepository(BaseRepository[User]):
             ) -> User:
         """Get user by any field"""
         result = await self.session.execute(
-            select(User).filter_by(
-                **kwargs
-                ))
-        return result.scalars().first()
-    
-    async def get_agent_by(
-            self,
-            **kwargs,
-            ) -> Agent:
-        """Get agent by any field"""
-        result = await self.session.execute(
-            select(Agent).options(joinedload(Agent.user)).filter_by(
+            select(User)
+            .options(
+                joinedload(User.agent)
+                .joinedload(Agent.reviews),
+                joinedload(User.image),
+            )
+            .filter_by(
                 **kwargs
                 ))
         return result.scalars().first()
@@ -46,7 +41,13 @@ class UserRepository(BaseRepository[User]):
             ) -> User:
         """Get user by id or raise 404"""
         result = await self.session.execute(
-            select(User).filter(
+            select(User)
+            .options(
+                joinedload(User.agent)
+                .joinedload(Agent.reviews),
+                joinedload(User.image),
+            )
+            .filter(
                 User.id == user_id
                 ))
         user = result.scalars().first()
@@ -62,6 +63,8 @@ class UserRepository(BaseRepository[User]):
         result = await self.session.execute(
             select(User).options(
                 joinedload(User.agent)
+                .joinedload(Agent.reviews),
+                joinedload(User.image),
             ).filter(
                 User.id == user_id
                 ))
@@ -70,20 +73,44 @@ class UserRepository(BaseRepository[User]):
             raise exceptions.Unauthorized
         return user
 
-    async def get_agent_or_401(
+    async def get_agent_by(
             self,
-            user_id: int,
+            exception: Exception,
+            **kwargs,
             ) -> Agent:
-        """Get agent by id or raise 401"""
+        """Get agent by any field"""
         result = await self.session.execute(
-            select(User).filter(
-                User.id == user_id,
-                User.role == "agent"
+            select(Agent).options(
+                joinedload(Agent.user)
+                .joinedload(User.image),
+                joinedload(Agent.reviews),
+                ).filter_by(
+                **kwargs
                 ))
-        user = result.scalars().first()
-        if not user:
-            raise exceptions.Unauthorized
-        return user
+        agent = result.scalars().first()
+        if not agent:
+            raise exception
+        return agent
+
+    async def get_agent_by_or_404(
+            self,
+            **kwargs,
+            ) -> Agent:
+        """Get agent by any field"""
+        return await self.get_agent_by(
+            exceptions.AgentNotFound,
+            **kwargs
+            )
+    
+    async def get_agent_by_or_401(
+            self,
+            **kwargs,
+            ) -> Agent:
+        """Get agent by any field"""
+        return await self.get_agent_by(
+            exceptions.Unauthorized,
+            **kwargs
+            )
 
     async def get_users_page_by(
             self,
@@ -109,3 +136,20 @@ class UserRepository(BaseRepository[User]):
             select(func.count(User.id))
             )
         return result.scalar()
+
+    async def add_review(
+            self,
+            user_id: int,
+            agent_id: int,
+            rating: int,
+            comment: str,
+            ) -> None:
+        """Post comment"""
+        self.session.add(
+            Review(
+                user_id=user_id,
+                agent_id=agent_id,
+                rating=rating,
+                comment=comment,
+                ))
+        await self.session.commit()

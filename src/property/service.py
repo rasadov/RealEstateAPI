@@ -97,20 +97,15 @@ class PropertyService:
 
     async def create_property(
             self,
-            payload: CreatePropertySchema,
+            schema: CreatePropertySchema,
             images: list[UploadFile],
             user_id: int,
             ) -> Property:
         """Create property"""
-        agent = await self.user_repository.get_agent_by(
-            user_id=user_id
-            )
-
-        if agent is None:
-            raise auth_exceptions.Unauthorized
+        agent = await self.user_repository.get_agent_by_or_401(user_id=user_id)
 
         return await self.property_repository.create_property(
-            payload, images, agent.id)
+            schema, images, agent.id)
 
     async def approve_property(
             self,
@@ -132,7 +127,7 @@ class PropertyService:
             is_sold: bool,
             ) -> Property:
         """Delete property"""
-        agent = await self.user_repository.get_agent_by(user_id=user_id)
+        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
         property = await self.property_repository.get_or_404(property_id)
 
         if property.owner_id != agent.id:
@@ -148,7 +143,7 @@ class PropertyService:
             user_id: int,
             ) -> Property:
         """Update property"""
-        agent = await self.user_repository.get_agent_by(user_id=user_id)
+        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
         property = await self.property_repository.get_or_404(property_id)
 
         if property.owner_id != agent.id:
@@ -164,7 +159,7 @@ class PropertyService:
             user_id: int
             ) -> Property:
         """Add image to property"""
-        agent = await self.user_repository.get_agent_by(user_id=user_id)
+        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
         property = await self.property_repository.get_or_404(property_id)
 
         if property.owner_id != agent.id:
@@ -184,7 +179,7 @@ class PropertyService:
             user_id: int,
             ) -> Property:
         """Delete property image"""
-        agent = await self.user_repository.get_agent_by(user_id=user_id)
+        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
         property = await self.property_repository.get_or_404(property_id)
 
         if property.owner_id != agent.id:

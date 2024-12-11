@@ -36,7 +36,7 @@ class User(CreateTimestampMixin):
     def image_url(self) -> str:
         """Get user image url"""
         return self.image.image_url if self.image else None
-    
+
     def update_user(self, payload: dict) -> None:
         """Update user"""
         for key, value in payload.items():
@@ -44,6 +44,20 @@ class User(CreateTimestampMixin):
                 setattr(self, key, value)
             else:
                 raise ValueError(f"Invalid key: {key}")
+
+    def dict(self) -> dict:
+        """Get user dictionary"""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "phone": self.phone,
+            "bio": self.bio,
+            "role": self.role,
+            "level": self.level,
+            "created_at": self.created_at,
+            "image_url": self.image_url,
+        }
 
     def verify_password(self, password: str) -> bool:
         """Verify user password"""
@@ -80,22 +94,39 @@ class Agent(CustomBase):
     )
     serial_number: Mapped[str] = mapped_column(String, nullable=False)
     company: Mapped[str] = mapped_column(String, nullable=True)
-    # experience: Mapped[float] = mapped_column(Float, nullable=True)
+    experience: Mapped[float] = mapped_column(Float, nullable=True)
     user: Mapped["User"] = relationship("User", back_populates="agent")
     properties: Mapped[list["Property"]] = relationship(
         "Property", back_populates="owner"
     )
     listings: Mapped[list["Listing"]] = relationship("Listing", back_populates="agent")
+    reviews: Mapped[list["Review"]] = relationship("Review", back_populates="agent")
 
     def __init__(self, user_id: int, serial_number: str) -> None:
         """Initialize agent"""
         self.user_id = user_id
         self.serial_number = serial_number
+
+    def dict(self) -> dict:
+        """Get agent dictionary"""
+        return {
+            "id": self.id,
+            "name": self.user.name,
+            "email": self.user.email,
+            "created_at": self.user.created_at,
+            "phone": self.user.phone,
+            "bio": self.user.bio,
+            "serial_number": self.serial_number,
+            "company": self.company,
+            "experience": self.experience,
+        }
     
     def update_agent(self, payload: dict) -> None:
         """Update agent"""
         for key, value in payload.items():
-            if key in ("serial_number", "company"):
+            print("KEY", key)
+            print("VALUE", value)
+            if key in ("serial_number", "company", "experience"):
                 setattr(self, key, value)
             elif key in ("name", "phone", "bio"):
                 setattr(self.user, key, value)
@@ -117,3 +148,21 @@ class Approval(CreateTimestampMixin):
 
     user: Mapped["User"] = relationship("User")
     property: Mapped["Property"] = relationship("Property")
+
+
+class Review(CreateTimestampMixin):
+    """Review of Agent model."""
+
+    __tablename__ = "ReviewModel"
+
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("UserModel.id"), nullable=False
+    )
+    agent_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("AgentModel.id"), nullable=False
+    )
+    rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    comment: Mapped[str] = mapped_column(String, nullable=True)
+
+    user: Mapped["User"] = relationship("User")
+    agent: Mapped["Agent"] = relationship("Agent")
