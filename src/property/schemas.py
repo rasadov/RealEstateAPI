@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
+
 class CreatePropertySchema(BaseModel):
     name: str
     description: str
@@ -16,6 +17,14 @@ class CreatePropertySchema(BaseModel):
     floors: int
     district: str
     address: str
+
+
+class CreateListingSchema(BaseModel):
+    name: str
+    description: Optional[str] = None
+    district: Optional[str] = None
+    address: Optional[str] = None
+
 
 class SearchPropertySchema(BaseModel):
     page: int = 1
@@ -45,3 +54,7 @@ class SearchPropertySchema(BaseModel):
         if self.district:
             filters["district"] = (self.district, "info.district", "==")
         return filters
+
+class PageSchema(BaseModel):
+    offset: int
+    elements: int

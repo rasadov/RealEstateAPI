@@ -16,15 +16,38 @@ class Listing(CustomBase):
 
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    district: Mapped[str] = mapped_column(String, nullable=True)
+    address: Mapped[str] = mapped_column(String, nullable=True)
     agent_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("AgentModel.id"), nullable=False
     )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     properties: Mapped[list["Property"]] = relationship(
         "Property", cascade="all, delete-orphan"
         )
     agent: Mapped["Agent"] = relationship("Agent")
+    images: Mapped[list["ListingImage"]] = relationship(
+        "ListingImage", back_populates="listing", cascade="all, delete-orphan"
+    )
+
+    @property
+    def length(self) -> int:
+        return len(self.properties)
+
+    def deactivate(self) -> None:
+        self.is_active = False
+
+class ListingImage(ImageMixin): # TO DO: Write migration for this
+    """Listing image model."""
+
+    __tablename__ = "ListingImageModel"
+
+    listing_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("ListingModel.id"), nullable=False
+    )
+
+    listing: Mapped["Listing"] = relationship("Listing", back_populates="images")
 
 
 class Property(CreateTimestampMixin):
@@ -46,14 +69,14 @@ class Property(CreateTimestampMixin):
     )
 
     location: Mapped["Location"] = relationship(
-        "Location", uselist=False, backref="property", cascade="all, delete-orphan"
+        "Location", uselist=False, back_populates="property", cascade="all, delete-orphan"
     )
     owner: Mapped["Agent"] = relationship("Agent", back_populates="properties")
     images: Mapped[list["PropertyImage"]] = relationship(
         "PropertyImage", back_populates="property", cascade="all, delete-orphan"
     )
     info: Mapped["PropertyInfo"] = relationship(
-        "PropertyInfo", uselist=False, backref="property", cascade="all, delete-orphan"
+        "PropertyInfo", uselist=False, back_populates="property", cascade="all, delete-orphan"
     )
     listing: Mapped["Listing"] = relationship("Listing", back_populates="properties")
 
@@ -87,9 +110,11 @@ class Location(CustomBase):
     property_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("PropertyModel.id"), nullable=False
     )
-    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)  # TO DO: Write migration for deleting this column
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
+
+    property: Mapped["Property"] = relationship("Property", back_populates="location")
 
 
 class PropertyInfo(CustomBase):
@@ -109,3 +134,5 @@ class PropertyInfo(CustomBase):
     floors: Mapped[int] = mapped_column(Integer, nullable=False)
     district: Mapped[str] = mapped_column(String, nullable=False)
     address: Mapped[str] = mapped_column(String, nullable=False)
+
+    property: Mapped["Property"] = relationship("Property", back_populates="info")

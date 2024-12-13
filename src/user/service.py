@@ -38,18 +38,18 @@ class UserService:
 
     async def add_review(
             self,
-            user_id: int,
+            current_user_id: int,
             agent_id: int,
             rating: int,
             comment: str,
             ) -> dict:
         """Post comment"""
-        user = await self.userRepository.get_or_401(user_id)
-        agent = await self.userRepository.get_agent_by_or_404(user_id=agent_id)
-        if user.id == agent_id:
+        user = await self.userRepository.get_or_401(current_user_id)
+        agent = await self.userRepository.get_agent_by_or_404(id=agent_id)
+        if user.id == agent.user_id:
             raise exceptions.InvalidReview
         
-        await self.userRepository.add_review(user, agent, rating, comment)
+        await self.userRepository.add_review(user.id, agent.id, rating, comment)
         
         return {"detail": "Comment added successfully"}
 

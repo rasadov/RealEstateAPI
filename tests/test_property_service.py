@@ -56,7 +56,7 @@ async def test_property_search_by_id():
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            f"http://localhost:8000/api/v1/property/{property_id}",
+            f"http://localhost:8000/api/v1/property/record/{property_id}",
         )
     
     print("TEST PROPERTY SEARCH BY ID")
@@ -70,7 +70,7 @@ async def test_property_search_by_id():
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            f"http://localhost:8000/api/v1/property/{property_id}",
+            f"http://localhost:8000/api/v1/property/record/{property_id}",
         )
     
     print("TEST PROPERTY SEARCH BY ID")
@@ -142,6 +142,17 @@ async def test_filtering_properties_2():
     print("TEST FILTERING PROPERTIES")
     print(response.json())
     assert response.status_code == 200
+
+@pytest.mark.asyncio
+async def test_map():
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "http://localhost:8000/api/v1/property/map"
+        )
+
+    print("TEST MAP")
+    print(response.json())
+    assert response.status_code == 204
 
 # # POST METHODS
 

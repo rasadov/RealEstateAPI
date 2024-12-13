@@ -18,7 +18,6 @@ def send_email(recipient: str, subject: str, body: str, sender: str = Settings.S
         server.login(Settings.SMTP_USER, Settings.SMTP_PASSWORD)
         server.sendmail(sender, [recipient], message.as_string())
 
-
 def send_email_verification(email: str, token: str) -> None:
     """
     Send an email verification email to the specified email address.

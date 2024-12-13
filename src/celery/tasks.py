@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from src.celery.db_celery import get_sync_db_session
 from src.staticfiles.dependencies import get_static_files_manager
-from src.property.models import Property, PropertyImage
-from src.user.models import Agent
+from src.property.models import Listing, ListingImage, Property, PropertyImage
+
 
 # Get the Redis URL from the environment variable
 redis_url = os.getenv('REDIS_URL', 'redis://redis:6379/0')
@@ -27,5 +27,21 @@ def queue_delete_property(id: int):
         static_files_manager.delete(image.image_url)
     db.query(PropertyImage).filter(PropertyImage.property_id == id).delete()
     db.delete(property)
+    db.commit()
+    db.close()
+
+@celery_app.task
+def queue_delete_listing(id: int):
+    db: Session = get_sync_db_session()
+    listing: Listing = db.query(Listing).get(id)
+    static_files_manager = get_static_files_manager()
+
+    if listing is None:
+        return
+    for image in listing.images:
+        print(f"Deleting image: {image.image_url}")
+        static_files_manager.delete(image.image_url)
+    db.query(ListingImage).filter(ListingImage.listing_id == id).delete()
+    db.delete(listing)
     db.commit()
     db.close()

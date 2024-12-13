@@ -6,8 +6,8 @@ from fastapi import UploadFile
 from src.property.repository import PropertyRepository
 from src.user.repository import UserRepository
 from src.auth import exceptions as auth_exceptions
-from src.property.models import Property, Location
-from src.property.schemas import CreatePropertySchema, SearchPropertySchema
+from src.property.models import Property, Listing, Location
+from src.property.schemas import CreatePropertySchema, CreateListingSchema, SearchPropertySchema
 from src.auth.schemas import TokenData
 from src.property import exceptions
 
@@ -69,17 +69,6 @@ class PropertyService:
             "total_pages": total_pages,
         }
 
-    async def search_properties(
-            self,
-            query: str,
-            page: int,
-            elements: int,
-            ) -> Sequence[Property]:
-        """Search properties"""
-        offset = (page - 1) * elements
-        return await self.property_repository.search_properties(
-            query, elements, offset)
-
     async def get_map_locations(
             self,
             ) -> Sequence[Location]:
@@ -95,6 +84,35 @@ class PropertyService:
         return await self.property_repository.get_at_location(
             latitude, longitude)
 
+    async def get_listing_by_id(
+            self,
+            id: int,
+            ) -> Listing:
+        """Get listing by id"""
+        listing = self.property_repository.get_listing(id)
+        if not listing:
+            raise exceptions.ListingNotFound
+        
+        return listing
+
+    async def get_listings_page(
+            self,
+            schema: SearchPropertySchema,
+            ) -> dict[str, int | Sequence]:
+        """Get listings page"""
+        offset = (schema.page - 1) * schema.elements
+
+        listings = await self.property_repository.get_listings_page(
+            schema.elements, offset)
+        count = await self.property_repository.get_listings_count()
+
+        total_pages = (count - 1) // schema.elements + 1
+
+        return {
+            "listings": listings,
+            "total_pages": total_pages,
+        }
+
     async def create_property(
             self,
             schema: CreatePropertySchema,
@@ -106,19 +124,105 @@ class PropertyService:
 
         return await self.property_repository.create_property(
             schema, images, agent.id)
+    
+    async def create_listing(
+            self,
+            schema: CreateListingSchema,
+            user_id: int,
+            ) -> Listing:
+        """Create listing"""
+        agent = await self.user_repository.get_agent_by_or_401(user_id=user_id)
 
-    async def approve_property(
+        return await self.property_repository.create_listing(schema, agent.id)
+
+    async def add_images_to_property(
             self,
             property_id: int,
-            user_id: int,
+            images: list[UploadFile],
+            user_id: int
             ) -> Property:
-        """Approve property"""
-        user = await self.user_repository.get_or_401(user_id)
+        """Add image to property"""
+        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
+        property = await self.property_repository.get_or_404(property_id)
 
-        if user.level < 1:
+        if property.owner_id != agent.id:
             raise auth_exceptions.Unauthorized
 
-        return await self.property_repository.approve_property(property_id)
+        current_images = await self.property_repository.count_property_images(property_id)
+        if current_images + len(images) > 15:
+            raise exceptions.PropertyImagesLimitExceeded
+
+        await self.property_repository.add_images_to_property(
+            property, images)
+
+        return property
+
+    async def add_images_to_listing(
+            self,
+            listing_id: int,
+            images: list[UploadFile],
+            user_id: int
+            ) -> Property:
+        """Add image to property"""
+        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
+        listing = await self.property_repository.get_listing_or_404(listing_id)
+
+        if listing.agent_id != agent.id:
+            raise auth_exceptions.Unauthorized
+
+        current_images = await self.property_repository.count_listing_images(listing.id)
+        if current_images + len(images) > 10:
+            raise exceptions.ListingImagesLimitExceeded
+
+        return await self.property_repository._add_images_to_listing(
+            listing, images)
+
+    async def update_property(
+            self,
+            property_id: int,
+            payload: dict,
+            user_id: int,
+            ) -> Property:
+        """Update property"""
+        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
+        property = await self.property_repository.get_or_404(property_id)
+
+        if property.owner_id != agent.id:
+            raise auth_exceptions.Unauthorized
+
+        return await self.property_repository.update_property(
+            property_id, payload)
+    
+    async def update_listing(
+            self,
+            listing_id: int,
+            payload: dict,
+            user_id: int,
+            ) -> Listing:
+        """Update listing"""
+        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
+        listing = await self.property_repository.get_listing_or_404(listing_id)
+
+        if listing.agent_id != agent.id:
+            raise auth_exceptions.Unauthorized
+
+        return await self.property_repository.update_listing(
+            listing_id, payload)
+
+    async def delete_image_from_property(
+            self,
+            property_id: int,
+            image_id: int,
+            user_id: int,
+            ) -> Property:
+        """Delete property image"""
+        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
+        property = await self.property_repository.get_or_404(property_id)
+
+        if property.owner_id != agent.id:
+            raise auth_exceptions.Unauthorized
+
+        return await self.property_repository.delete_image_from_property(image_id)
 
     async def delete_property(
             self,
@@ -136,53 +240,31 @@ class PropertyService:
         return await self.property_repository.delete_property(
             property_id, is_sold)
 
-    async def update_property(
+    async def delete_image_from_listing(
             self,
-            property_id: int,
-            payload: dict,
-            user_id: int,
-            ) -> Property:
-        """Update property"""
-        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
-        property = await self.property_repository.get_or_404(property_id)
-
-        if property.owner_id != agent.id:
-            raise auth_exceptions.Unauthorized
-
-        return await self.property_repository.update_property(
-            property_id, payload)
-
-    async def add_images_to_property(
-            self,
-            property_id: int,
-            images: list[UploadFile],
-            user_id: int
-            ) -> Property:
-        """Add image to property"""
-        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
-        property = await self.property_repository.get_or_404(property_id)
-
-        if property.owner_id != agent.id:
-            raise auth_exceptions.Unauthorized
-
-        current_images = await self.property_repository.count_images(property_id)
-        if current_images + len(images) > 15:
-            raise exceptions.PropertyImagesLimitExceeded
-
-        return await self.property_repository.add_images_to_property(
-            property_id, images)
-
-    async def delete_image_from_property(
-            self,
-            property_id: int,
+            listing_id: int,
             image_id: int,
             user_id: int,
-            ) -> Property:
-        """Delete property image"""
+            ) -> Listing:
+        """Delete listing image"""
         agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
-        property = await self.property_repository.get_or_404(property_id)
+        listing = await self.property_repository.get_listing_or_404(listing_id)
 
-        if property.owner_id != agent.id:
+        if listing.agent_id != agent.id:
+            raise auth_exceptions.Unauthorized
+        
+        return await self.property_repository.delete_image_from_listing(image_id)
+    
+    async def delete_listing(
+            self,
+            listing_id: int,
+            user_id: int,
+            ) -> Listing:
+        """Delete listing"""
+        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
+        listing = await self.property_repository.get_listing_or_404(listing_id)
+
+        if listing.agent_id != agent.id:
             raise auth_exceptions.Unauthorized
 
-        return await self.property_repository.delete_image_from_property(image_id)
+        return await self.property_repository.delete_listing(listing_id)

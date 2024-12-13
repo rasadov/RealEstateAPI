@@ -145,6 +145,8 @@ class UserRepository(BaseRepository[User]):
             comment: str,
             ) -> None:
         """Post comment"""
+        print(user_id, agent_id, rating, comment)
+        print(type(user_id), type(agent_id), type(rating), type(comment))
         self.session.add(
             Review(
                 user_id=user_id,

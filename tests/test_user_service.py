@@ -121,6 +121,28 @@ async def test_agent_update_2():
     assert response.status_code == 200
 
 @pytest.mark.asyncio
+async def test_review_agent():
+    email, password = generate_register_credentials()
+    response = httpx.post("http://localhost:8000/api/v1/auth/register", json={
+        "email": email,
+        "password": password,
+        "role": "buyer",
+        "name": "testreview"
+    })
+
+    assert response.status_code == 200
+
+    cookies = response.cookies
+
+    response = httpx.post("http://localhost:8000/api/v1/user/review", json={
+        "agent_id": 1,
+        "rating": 5,
+        "comment": "testcomment"
+    }, cookies=cookies)
+    
+    assert response.status_code == 200
+
+@pytest.mark.asyncio
 async def test_user_deletion():
     email, password = generate_register_credentials()
     response = httpx.post("http://localhost:8000/api/v1/auth/register", json={

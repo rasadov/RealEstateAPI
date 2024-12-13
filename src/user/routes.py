@@ -53,11 +53,11 @@ async def get_confirm_email_token(
 @router.post("/review")
 async def add_review(
     schema: ReviewSchema,
-    user: TokenData = Depends(get_current_user),
+    current_user: TokenData = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service)
     ):
     return await user_service.add_review(
-        user.user_id,
+        current_user.user_id,
         schema.agent_id,
         schema.rating,
         schema.comment,
