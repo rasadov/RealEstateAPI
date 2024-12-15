@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, Query
 from typing import Optional
 
 from src.property.service import PropertyService
-from src.property.dependencies import get_property_service, create_property_form
+from src.property.dependencies import get_property_service
 from src.auth.dependencies import get_current_user, get_current_user_optional
 from src.auth.schemas import TokenData
 from src.property.schemas import PageSchema, CreatePropertySchema, CreateListingSchema, SearchPropertySchema
@@ -48,11 +48,12 @@ async def get_properties_by_agent_page(
 
 @router.get("/listings/page")
 async def get_listings_page(
-    schema: PageSchema = Depends(PageSchema),
+    page: int = Query(1),
+    elements: int = Query(10),
     property_service: PropertyService = Depends(get_property_service)
     ):
     return await property_service.get_listings_page(
-        schema)
+        page, elements)
 
 @router.get("/listing/{id}")
 async def get_listing_by_id(
@@ -63,7 +64,7 @@ async def get_listing_by_id(
 
 @router.post("/create")
 async def create_property(
-    payload: CreatePropertySchema = Depends(create_property_form),
+    payload: CreatePropertySchema = Depends(CreatePropertySchema.as_form),
     files: list[UploadFile] = File(...),
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
@@ -84,11 +85,12 @@ async def add_image_to_property(
 
 @router.post("/listing")
 async def create_listing(
-    schema: CreateListingSchema,
+    schema: CreateListingSchema = Depends(CreateListingSchema.as_form),
     images: list[UploadFile] = File(...),
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
     ):
+    print("HERE IS THE SCHEMA", schema)
     return await property_service.create_listing(
         schema, images, user.user_id)
 

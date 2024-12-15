@@ -89,24 +89,28 @@ class PropertyService:
             id: int,
             ) -> Listing:
         """Get listing by id"""
-        listing = self.property_repository.get_listing(id)
+        listing = await self.property_repository.get_listing(id)
+
         if not listing:
             raise exceptions.ListingNotFound
-        
         return listing
 
     async def get_listings_page(
             self,
-            schema: SearchPropertySchema,
+            page: int,
+            elements: int,
             ) -> dict[str, int | Sequence]:
         """Get listings page"""
-        offset = (schema.page - 1) * schema.elements
+        offset = (page - 1) * elements
+
+        if offset < 0:
+            offset = 0
 
         listings = await self.property_repository.get_listings_page(
-            schema.elements, offset)
+            elements, offset)
         count = await self.property_repository.get_listings_count()
 
-        total_pages = (count - 1) // schema.elements + 1
+        total_pages = (count - 1) // elements + 1
 
         return {
             "listings": listings,
@@ -128,12 +132,14 @@ class PropertyService:
     async def create_listing(
             self,
             schema: CreateListingSchema,
+            images: list[UploadFile],
             user_id: int,
             ) -> Listing:
         """Create listing"""
         agent = await self.user_repository.get_agent_by_or_401(user_id=user_id)
 
-        return await self.property_repository.create_listing(schema, agent.id)
+        return await self.property_repository.create_listing(
+            schema, images, agent.id)
 
     async def add_images_to_property(
             self,

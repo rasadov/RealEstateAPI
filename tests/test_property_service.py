@@ -152,7 +152,67 @@ async def test_map():
 
     print("TEST MAP")
     print(response.json())
-    assert response.status_code == 204
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_listings():
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "http://localhost:8000/api/v1/property/listings/page",
+            params={
+                "offset": 0,
+                "elements": 10
+            }
+        )
+
+    print("TEST LISTINGS")
+    assert response.status_code == 200
+
+@pytest.mark.asyncio
+async def test_listings_creation():
+    files = generate_images_as_bytes(5)
+    files = [("images", (f"image_{i}.png", image, "image/png")) for i, image in enumerate(files)]
+    cookies = agent_response.cookies
+    data = {
+        "name": "name_of_listing",
+        "description": "description_of_listing",
+        "district": "district_of_listing",
+        "address": "address_of_listing"
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "http://localhost:8000/api/v1/property/listing",
+            data=data,
+            files=files,
+            headers={
+                "Authorization": f"Bearer {cookies['access_token']}",
+                "Accept": "application/json"
+            },
+            cookies={
+                "refresh_token": cookies["refresh_token"],
+                "access_token": cookies["access_token"]
+            },
+            timeout=30
+        )
+
+    print("TEST LISTINGS CREATION")
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_listing_by_id():
+    listing_id = 1
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"http://localhost:8000/api/v1/property/listing/{listing_id}"
+        )
+
+    print("TEST LISTING BY ID")
+    assert response.status_code == 200
+
 
 # # POST METHODS
 

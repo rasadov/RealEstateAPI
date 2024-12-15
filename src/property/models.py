@@ -16,8 +16,8 @@ class Listing(CustomBase):
 
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
-    district: Mapped[str] = mapped_column(String, nullable=True)
-    address: Mapped[str] = mapped_column(String, nullable=True)
+    # district: Mapped[str] = mapped_column(String, nullable=True)
+    # address: Mapped[str] = mapped_column(String, nullable=True)
     agent_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("AgentModel.id"), nullable=False
     )
@@ -110,7 +110,6 @@ class Location(CustomBase):
     property_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("PropertyModel.id"), nullable=False
     )
-    is_active: Mapped[bool] = mapped_column(Boolean, default=False)  # TO DO: Write migration for deleting this column
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
 

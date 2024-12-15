@@ -92,13 +92,15 @@ class PropertyRepository(BaseRepository[Property]):
             .options(
                 joinedload(Listing.agent),
                 joinedload(Listing.properties)
-                .joinedload(Property.location)
-                .joinedload(Property.info)
-                .joinedload(Property.images),
+                .options(
+                    joinedload(Property.location),
+                    joinedload(Property.info),
+                    joinedload(Property.images)
+                ),
                 joinedload(Listing.images)
             )
             .filter(Listing.id.in_(subquery))
-            .order_by(Listing.created_at.desc())
+            .order_by(Listing.id.desc())
             .limit(limit)
             .offset(offset)
         )
@@ -134,9 +136,11 @@ class PropertyRepository(BaseRepository[Property]):
             .options(
                 joinedload(Listing.agent),
                 joinedload(Listing.properties)
-                .joinedload(Property.location)
-                .joinedload(Property.info)
-                .joinedload(Property.images),
+                .options(
+                    joinedload(Property.location),
+                    joinedload(Property.info),
+                    joinedload(Property.images)
+                ),
                 joinedload(Listing.images)
             )
             .filter(Listing.id == listing_id)
@@ -370,8 +374,8 @@ class PropertyRepository(BaseRepository[Property]):
         listing = Listing(
             name=schema.name,
             description=schema.description,
-            district=schema.district,
-            address=schema.address,
+            # district=schema.district,
+            # address=schema.address,
             agent_id=agent_id
         )
 
