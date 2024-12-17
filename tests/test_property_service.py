@@ -182,6 +182,7 @@ async def test_listings_creation():
     }
 
     async with httpx.AsyncClient() as client:
+        client.cookies = cookies
         response = await client.post(
             "http://localhost:8000/api/v1/property/listing",
             data=data,
@@ -189,10 +190,6 @@ async def test_listings_creation():
             headers={
                 "Authorization": f"Bearer {cookies['access_token']}",
                 "Accept": "application/json"
-            },
-            cookies={
-                "refresh_token": cookies["refresh_token"],
-                "access_token": cookies["access_token"]
             },
             timeout=30
         )

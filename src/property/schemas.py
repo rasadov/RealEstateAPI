@@ -1,33 +1,9 @@
-from typing import Optional, Type
-import inspect
+from typing import Optional
 
-from fastapi import Form
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 
-def as_form(cls: Type[BaseModel]):
-    new_params = []
-    for field_name, field in cls.model_fields.items():
-        alias = field.alias or field_name  # Fallback to field name if alias is None
-        required = field.is_required()
-        print(f"Processing field: Name: {field_name}, Alias: {alias}, Required: {required}, Default: {field.default}, Annotation: {field.annotation}")
+from src.base.schemas import as_form
 
-        param = inspect.Parameter(
-            alias,
-            inspect.Parameter.POSITIONAL_OR_KEYWORD,
-            default=Form(... if required else None),
-            annotation=field.annotation,
-        )
-        new_params.append(param)
-
-    async def _as_form(**data):
-        print("Form data received:", data)
-        return cls(**data)
-
-    sig = inspect.signature(_as_form)
-    new_sig = sig.replace(parameters=new_params)
-    _as_form.__signature__ = new_sig
-    setattr(cls, "as_form", _as_form)
-    return cls
 
 
 @as_form
@@ -40,20 +16,23 @@ class CreatePropertySchema(BaseModel):
     category: str
     total_area: float
     living_area: float
-    bedrooms: int
-    living_rooms : int
+    apartment_area: float
+    kitchen_area: float
+    rooms: int
+    bathrooms: int
+    living_rooms: int
     floor: int
     floors: int
     district: str
     address: str
-
-
-@as_form
-class CreateListingSchema(BaseModel):
-    name: str
-    description: Optional[str] = None
-    district: Optional[str] = None
-    address: Optional[str] = None
+    balcony: str
+    view: str
+    year_built: int
+    building_type: str
+    elevators: int
+    parking: str
+    flooring_type: str
+    owner_id: int
 
 
 class SearchPropertySchema(BaseModel):
@@ -68,23 +47,19 @@ class SearchPropertySchema(BaseModel):
     district: Optional[str] = None
 
     def get_filters(self) -> dict:
-        filters = {}
+        filters = []
         if self.min_area:
-            filters["min_area"] = (self.min_area, "info.total_area", ">=")
+            filters.append((self.min_area, "info.total_area", ">="))
         if self.max_area:
-            filters["max_area"] = (self.max_area, "info.total_area", "<=")
+            filters.append((self.max_area, "info.total_area", "<="))
         if self.min_price:
-            filters["min_price"] = (self.min_price, "price", ">=")
+            filters.append((self.min_price, "price", ">="))
         if self.max_price:
-            filters["max_price"] = (self.max_price, "price", "<=")
+            filters.append((self.max_price, "price", "<="))
         if self.rooms:
-            filters["rooms"] = (self.rooms, "info.bedrooms", "==")
+            filters.append((self.rooms, "info.bedrooms", "=="))
         if self.category:
-            filters["category"] = (self.category, "info.category", "==")
+            filters.append((self.category, "info.category", "=="))
         if self.district:
-            filters["district"] = (self.district, "info.district", "==")
+            filters.append((self.district, "info.district", "=="))
         return filters
-
-class PageSchema(BaseModel):
-    offset: int = 0
-    elements: int = 10

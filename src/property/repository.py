@@ -9,10 +9,12 @@ from fastapi import UploadFile
 
 from src.base.repository import BaseRepository
 from src.staticfiles.manager import BaseStaticFilesManager
-from src.property.models import Listing, ListingImage, Property, PropertyImage, PropertyInfo, Location 
+from src.property.models import Property, PropertyImage, PropertyInfo, PropertyLocation, PropertyBuilding
 from src.user.models import Approval
 from src.property import exceptions
-from src.property.schemas import CreatePropertySchema, CreateListingSchema
+from src.property.schemas import CreatePropertySchema
+from src.listing.schemas import CreateListingSchema
+from src.listing.models import Listing, ListingImage
 from src.celery.tasks import queue_delete_property
 
 @dataclass
@@ -21,11 +23,11 @@ class PropertyRepository(BaseRepository[Property]):
 
     staticFilesManager: BaseStaticFilesManager
 
-    async def get_map_locations(self) -> Sequence[Location]:
+    async def get_map_locations(self) -> Sequence[PropertyLocation]:
         """Get map locations"""
         result = await self.session.execute(
-            select(Location)
-            .join(Location.property)
+            select(PropertyLocation)
+            .join(PropertyLocation.property)
             .filter(
                 and_(
                     Property.is_active == True,
@@ -50,8 +52,8 @@ class PropertyRepository(BaseRepository[Property]):
                     Property.is_active == True,
                     Property.is_sold == False,
                     Property.approved == True,
-                    Location.latitude == latitude,
-                    Location.longitude == longitude,
+                    PropertyLocation.latitude == latitude,
+                    PropertyLocation.longitude == longitude,
                 )                
             )
         )
@@ -207,7 +209,7 @@ class PropertyRepository(BaseRepository[Property]):
             self,
             limit: int,
             offset: int,
-            filters: dict[str, tuple],
+            filters: list[tuple],
             ) -> Sequence[Property]:
         """Get properties page"""
         filter_conditions = [
@@ -222,9 +224,7 @@ class PropertyRepository(BaseRepository[Property]):
             "==": "__eq__",
         }
 
-        print(filters)
-
-        for key, (value, attr_path, op) in filters.items():
+        for value, attr_path, op in filters:
             if "." in attr_path:
                 base_attr, related_attr = attr_path.split(".")
                 attr = getattr(getattr(Property, base_attr).property.mapper.class_, related_attr)
@@ -462,7 +462,7 @@ class PropertyRepository(BaseRepository[Property]):
             name=schema.name,
             description=schema.description,
             price=schema.price,
-            location=Location(
+            location=PropertyLocation(
                 latitude=schema.latitude,
                 longitude=schema.longitude
                 ),
@@ -470,12 +470,24 @@ class PropertyRepository(BaseRepository[Property]):
                 category=schema.category,
                 total_area=schema.total_area,
                 living_area=schema.living_area,
-                bedrooms=schema.bedrooms,
+                apartment_area=schema.apartment_area,
+                kitchen_area=schema.kitchen_area,
+                rooms=schema.rooms,
+                bathrooms=schema.bathrooms,
                 living_rooms=schema.living_rooms,
                 floor=schema.floor,
                 floors=schema.floors,
                 district=schema.district,
-                address=schema.address
+                address=schema.address,
+                balcony=schema.balcony,
+                view=schema.view
+            ),
+            building=PropertyBuilding(
+                year_built=schema.year_built,
+                building_type=schema.building_type,
+                elevators=schema.elevators,
+                parking=schema.parking,
+                flooring_type=schema.flooring_type
             ),
             owner_id=agent_id)
 

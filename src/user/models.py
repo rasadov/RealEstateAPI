@@ -166,3 +166,21 @@ class Review(CreateTimestampMixin):
 
     user: Mapped["User"] = relationship("User")
     agent: Mapped["Agent"] = relationship("Agent")
+
+
+class AgentReport(CreateTimestampMixin):
+    """Report model."""
+
+    __tablename__ = "AgentReportModel"
+
+    agent_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("AgentModel.id"), nullable=False
+    )
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("UserModel.id"), nullable=False
+    )
+    reason: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=True)
+
+    agent: Mapped["Agent"] = relationship("Agent")
+    user: Mapped["User"] = relationship("User")

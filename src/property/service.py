@@ -4,12 +4,13 @@ from typing import Sequence
 from fastapi import UploadFile
 
 from src.property.repository import PropertyRepository
-from src.user.repository import UserRepository
-from src.auth import exceptions as auth_exceptions
-from src.property.models import Property, Listing, Location
-from src.property.schemas import CreatePropertySchema, CreateListingSchema, SearchPropertySchema
-from src.auth.schemas import TokenData
 from src.property import exceptions
+from src.property.models import Property, Listing, PropertyLocation
+from src.property.schemas import CreatePropertySchema, SearchPropertySchema
+from src.listing.schemas import CreateListingSchema
+from src.user.repository import UserRepository
+from src.auth.schemas import TokenData
+from src.auth import exceptions as auth_exceptions
 
 @dataclass
 class PropertyService:
@@ -45,10 +46,10 @@ class PropertyService:
         properties = await self.property_repository.get_properties_page(
             schema.elements, offset, filters)
         count = await self.property_repository.get_properties_count()
-        total_pages = (count - 1) // schema.elements + 1
+
         return {
             "properties": properties,
-            "total_pages": total_pages,
+            "results": count,
         }
 
     async def get_properties_by_agent_page(
@@ -63,15 +64,15 @@ class PropertyService:
             limit=elements, offset=offset, owner_id=agent_id)
         count = await self.property_repository.get_properties_page_by_count(
             owner_id=agent_id)
-        total_pages = (count - 1) // elements + 1
+
         return {
             "properties": properties,
-            "total_pages": total_pages,
+            "results": count,
         }
 
     async def get_map_locations(
             self,
-            ) -> Sequence[Location]:
+            ) -> Sequence[PropertyLocation]:
         """Get map locations"""
         return await self.property_repository.get_map_locations()
     
@@ -110,11 +111,9 @@ class PropertyService:
             elements, offset)
         count = await self.property_repository.get_listings_count()
 
-        total_pages = (count - 1) // elements + 1
-
         return {
             "listings": listings,
-            "total_pages": total_pages,
+            "results": count,
         }
 
     async def create_property(

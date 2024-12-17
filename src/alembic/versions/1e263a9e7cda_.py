@@ -31,9 +31,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['user_id'], ['UserModel.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
-    op.add_column('AgentModel', sa.Column('experience', sa.Float(), nullable=True))
 
 
 def downgrade() -> None:
-    op.drop_column('AgentModel', 'experience')
     op.drop_table('ReviewModel')

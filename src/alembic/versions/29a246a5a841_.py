@@ -19,11 +19,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.drop_column("LocationModel", "is_active")
-    op.add_column("LocationModel", sa.Column("district", sa.String(), nullable=True))
-    op.add_column("LocationModel", sa.Column("address", sa.String(), nullable=True))
-    op.add_column("LocationModel", sa.Column("is_active", sa.BOOLEAN(), nullable=True))
-
     op.create_table(
         "ListingImageModel",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -33,8 +28,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id")
     )
 
+
 def downgrade() -> None:
-    op.add_column("LocationModel", sa.Column("is_active", sa.BOOLEAN(), nullable=True))
-    op.drop_column("LocationModel", "district")
-    op.drop_column("LocationModel", "address")
     op.drop_table("ListingImageModel")

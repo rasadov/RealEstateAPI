@@ -1,7 +1,7 @@
 """Base model class and utils."""
 from datetime import datetime
 
-from sqlalchemy import func, String, Integer, DateTime
+from sqlalchemy import func, String, Integer, Float, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.db import Base
@@ -49,3 +49,17 @@ class ImageMixin(CustomBase):
 
     def __repr__(self):
         return self.image_url
+
+class LocationMixin(CustomBase):
+    """Mixin for adding location to the model"""
+
+    __abstract__ = True
+
+    longitude: Mapped[float] = mapped_column(Float, nullable=False)
+    latitude: Mapped[float] = mapped_column(Float, nullable=False)
+
+    def __str__(self):
+        return f"{self.longitude}, {self.latitude}"
+
+    def __repr__(self):
+        return f"{self.longitude}, {self.latitude}"
