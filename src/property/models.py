@@ -29,7 +29,7 @@ class Property(CreateTimestampMixin):
     )
 
     location: Mapped["PropertyLocation"] = relationship(
-        "Location", uselist=False, back_populates="property", cascade="all, delete-orphan"
+        "PropertyLocation", uselist=False, back_populates="property", cascade="all, delete-orphan"
     )
     owner: Mapped["Agent"] = relationship("Agent", back_populates="properties")
     images: Mapped[list["PropertyImage"]] = relationship(

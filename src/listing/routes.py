@@ -4,18 +4,18 @@ from src.property.service import PropertyService
 from src.property.dependencies import get_property_service
 from src.auth.dependencies import get_current_user
 from src.auth.schemas import TokenData
-from src.property.schemas import CreateListingSchema
+from src.listing.schemas import CreateListingSchema
 from src.property.service import PropertyService
 from src.property.dependencies import get_property_service
 
 
 router = APIRouter(
-    prefix='api/v1/listing',
+    prefix='/api/v1/listing',
     tags=['listing']
 )
 
 
-@router.get("/listings/page")
+@router.get("/page")
 async def get_listings_page(
     page: int = Query(1),
     elements: int = Query(10),
@@ -24,14 +24,14 @@ async def get_listings_page(
     return await property_service.get_listings_page(
         page, elements)
 
-@router.get("/listing/{id}")
+@router.get("/record/{id}")
 async def get_listing_by_id(
     id: int,
     property_service: PropertyService = Depends(get_property_service)
     ):
     return await property_service.get_listing_by_id(id)
 
-@router.post("/listing")
+@router.post("/")
 async def create_listing(
     schema: CreateListingSchema = Depends(CreateListingSchema.as_form),
     images: list[UploadFile] = File(...),
@@ -42,7 +42,7 @@ async def create_listing(
     return await property_service.create_listing(
         schema, images, user.user_id)
 
-@router.post("/listing/image/{listing_id}")
+@router.post("/image/{listing_id}")
 async def add_image_to_listing(
     listing_id: int,
     files: list[UploadFile] = File(...),
@@ -52,7 +52,7 @@ async def add_image_to_listing(
     return await property_service.add_images_to_listing(
         listing_id, files, user.user_id)
 
-@router.put("/listing/{id}")
+@router.put("/{id}")
 async def update_listing(
     id: int,
     payload: dict,
@@ -62,7 +62,7 @@ async def update_listing(
     return await property_service.update_listing(
         id, payload, user.user_id)
 
-@router.delete("/listing/{id}")
+@router.delete("/record/{id}")
 async def delete_listing(
     id: int,
     user: TokenData = Depends(get_current_user),
@@ -71,7 +71,7 @@ async def delete_listing(
     return await property_service.delete_listing(
         id, user.user_id)
 
-@router.delete("/listing/{id}/image/{image_id}")
+@router.delete("/record/{id}/image/{image_id}")
 async def delete_image_from_listing(
     id: int,
     image_id: int,
@@ -80,4 +80,3 @@ async def delete_image_from_listing(
     ):
     return await property_service.delete_image_from_listing(
         id, image_id, user.user_id)
-

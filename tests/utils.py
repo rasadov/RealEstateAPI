@@ -20,11 +20,6 @@ def generate_random_image(width: int = 800, height: int = 600) -> Image.Image:
     # Set the pixel data
     image.putdata(pixels)
 
-    # Save the image
-    try:
-        image.save("test_img_pil.png")
-    except Exception as e:
-        print(f"Error saving image: {e}")
     return image
 
 

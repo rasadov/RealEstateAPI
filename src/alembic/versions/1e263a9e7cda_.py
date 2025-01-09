@@ -18,20 +18,26 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-def upgrade() -> None:
+def upgrade():
+    # Create ListingModel table
     op.create_table(
-        'ReviewModel',
-        sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('user_id', sa.Integer(), nullable=False),
-        sa.Column('agent_id', sa.Integer(), nullable=False),
-        sa.Column('rating', sa.Integer(), nullable=False),
-        sa.Column('comment', sa.String(), nullable=True),
-        sa.ForeignKeyConstraint(['agent_id'], ['AgentModel.id'], ),
-        sa.ForeignKeyConstraint(['user_id'], ['UserModel.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        'ListingModel',
+        sa.Column('id', sa.Integer(), primary_key=True, autoincrement=True),
+        sa.Column('name', sa.String(), nullable=False),
+        sa.Column('description', sa.String(), nullable=True),
+        sa.Column('agent_id', sa.Integer(), sa.ForeignKey('AgentModel.id'), nullable=False),
+        sa.Column('is_active', sa.Boolean(), default=True),
     )
 
+    # Create ListingImageModel table
+    op.create_table(
+        'ListingImageModel',
+        sa.Column('id', sa.Integer(), primary_key=True, autoincrement=True),
+        sa.Column('image_url', sa.String(), nullable=True),
+        sa.Column('listing_id', sa.Integer(), sa.ForeignKey('ListingModel.id'), nullable=False),
+    )
 
-def downgrade() -> None:
-    op.drop_table('ReviewModel')
+def downgrade():
+    # Drop tables in reverse order of creation
+    op.drop_table('ListingImageModel')
+    op.drop_table('ListingModel')

@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 
 from src.celery.db_celery import get_sync_db_session
 from src.staticfiles.dependencies import get_static_files_manager
-from src.property.models import Listing, ListingImage, Property, PropertyImage
+from src.property.models import Property, PropertyImage
+from src.listing.models import Listing, ListingImage
 
 
 # Get the Redis URL from the environment variable

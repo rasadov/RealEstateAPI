@@ -5,7 +5,8 @@ from fastapi import UploadFile
 
 from src.property.repository import PropertyRepository
 from src.property import exceptions
-from src.property.models import Property, Listing, PropertyLocation
+from src.property.models import Property, PropertyLocation
+from src.listing.models import Listing
 from src.property.schemas import CreatePropertySchema, SearchPropertySchema
 from src.listing.schemas import CreateListingSchema
 from src.user.repository import UserRepository

@@ -66,7 +66,7 @@ async def test_property_search_by_id():
 
 @pytest.mark.asyncio
 async def test_property_search_by_id():
-    property_id = 15
+    property_id = 1
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
@@ -159,7 +159,7 @@ async def test_map():
 async def test_listings():
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            "http://localhost:8000/api/v1/property/listings/page",
+            "http://localhost:8000/api/v1/listing/page",
             params={
                 "offset": 0,
                 "elements": 10
@@ -184,7 +184,7 @@ async def test_listings_creation():
     async with httpx.AsyncClient() as client:
         client.cookies = cookies
         response = await client.post(
-            "http://localhost:8000/api/v1/property/listing",
+            "http://localhost:8000/api/v1/listing/",
             data=data,
             files=files,
             headers={
@@ -204,7 +204,7 @@ async def test_listing_by_id():
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            f"http://localhost:8000/api/v1/property/listing/{listing_id}"
+            f"http://localhost:8000/api/v1/listing/record/{listing_id}"
         )
 
     print("TEST LISTING BY ID")
@@ -213,49 +213,49 @@ async def test_listing_by_id():
 
 # # POST METHODS
 
-# @pytest.mark.asyncio
-# async def test_property_creation():
-#     images = generate_images_as_bytes(5)
-#     files = [("files", (f"image_{i}.png", image, "image/png")) for i, image in enumerate(images)]
+@pytest.mark.asyncio
+async def test_property_creation():
+    images = generate_images_as_bytes(5)
+    files = [("files", (f"image_{i}.png", image, "image/png")) for i, image in enumerate(images)]
 
-#     # Assuming you have a way to get the access token
-#     access_token = agent_response.cookies["access_token"]
-#     refresh_token = agent_response.cookies["refresh_token"]
+    # Assuming you have a way to get the access token
+    access_token = agent_response.cookies["access_token"]
+    refresh_token = agent_response.cookies["refresh_token"]
     
-#     data = {
-#         "name": "test_property",
-#         "description": "test_description",
-#         "price": "1000.0",  # Ensure all values are strings for form data
-#         "latitude": "0.0",
-#         "longitude": "0.0",
-#         "category": "apartment",
-#         "total_area": "100.0",
-#         "living_area": "50.0",
-#         "bedrooms": "2",
-#         "living_rooms": "1",
-#         "floor": "1",
-#         "floors": "5",
-#         "district": "test_district",
-#         "address": "test_address"
-#     }
+    data = {
+        "name": "test_property",
+        "description": "test_description",
+        "price": "1000.0",  # Ensure all values are strings for form data
+        "latitude": "0.0",
+        "longitude": "0.0",
+        "category": "apartment",
+        "total_area": "100.0",
+        "living_area": "50.0",
+        "bedrooms": "2",
+        "living_rooms": "1",
+        "floor": "1",
+        "floors": "5",
+        "district": "test_district",
+        "address": "test_address"
+    }
     
-#     async with httpx.AsyncClient() as client:
-#         response = await client.post(
-#             "http://localhost:8000/api/v1/property/create",
-#             data=data,
-#             files=files,
-#             headers={
-#                 "Authorization": f"Bearer {access_token}",
-#                 "Accept": "application/json"
-#             },
-#             cookies={
-#                 "refresh_token": refresh_token,
-#                 "access_token": access_token
-#             },
-#             timeout=30
-#         )
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "http://localhost:8000/api/v1/property/create",
+            data=data,
+            files=files,
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Accept": "application/json"
+            },
+            cookies={
+                "refresh_token": refresh_token,
+                "access_token": access_token
+            },
+            timeout=30
+        )
 
-#     assert response.status_code == 200
+    assert response.status_code == 200
 
 # @pytest.mark.asyncio
 # async def test_adding_image_to_property():
