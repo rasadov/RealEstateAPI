@@ -43,9 +43,7 @@ class AuthService:
 
         response = JSONResponse(content={
             "detail": "Login successful",
-            "email": user.email,
-            "user_id": user.id,
-            "level": user.level,
+            "user": user.dict()
         })
         response.set_cookie(
             "access_token",
@@ -81,20 +79,20 @@ class AuthService:
         )
         if user_exists:
             raise exceptions.EmailAlreadyTaken
-        if payload.get("role") == "agent" and not payload.get("serial_number"):
+        if payload.get("role") == "agent" and not payload.get("serialNumber"):
             raise exceptions.InvalidSerialNumber
         new_user = User(
             name=payload.get("name"),
             email=payload.get("email"),
             password_hash=hash_password(payload.get("password"))
         )
-        self.user_service.userRepository.add(new_user)
-        await self.user_service.userRepository.commit()
-        await self.user_service.userRepository.refresh(new_user)
+        self.user_service.user_repository.add(new_user)
+        await self.user_service.user_repository.commit()
+        await self.user_service.user_repository.refresh(new_user)
         if payload.get("role") == "agent":
             await self._register_agent(
                 new_user,
-                payload.get("serial_number")
+                payload.get("serialNumber")
                 )
 
         return await self.authenticate(new_user.email)
@@ -107,8 +105,8 @@ class AuthService:
         """Register agent"""
         user.role = "agent"
         agent = Agent(user.id, serial_number)
-        self.user_service.userRepository.add(agent)
-        await self.user_service.userRepository.commit()
+        self.user_service.user_repository.add(agent)
+        await self.user_service.user_repository.commit()
 
     async def refresh_tokens(
             self,
@@ -116,7 +114,7 @@ class AuthService:
             ) -> JSONResponse:
         """Refresh token"""
         user_id = self._parse_token(request, oauth2.AuthTokenTypes.REFRESH)
-        user = await self.user_service.userRepository.get_or_401(user_id)
+        user = await self.user_service.user_repository.get_or_401(user_id)
         tokens = oauth2.generate_auth_tokens(user.id)
 
         response = JSONResponse(content={

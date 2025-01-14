@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Sequence
 
 from src.base.utils import send_email
 from src.auth import exceptions
@@ -10,14 +11,14 @@ from src.auth import oauth2
 class UserService:
     """User service"""
 
-    userRepository: UserRepository
+    user_repository: UserRepository
 
     async def get_user_by_email(
             self,
             email: str,
             ) -> User:
         """Get user by email"""
-        user = await self.userRepository.get_user_by(email=email)
+        user = await self.user_repository.get_user_by(email=email)
         return user
     
     async def get_user(
@@ -25,7 +26,7 @@ class UserService:
             id: int,
             ) -> dict:
         """Get user"""
-        user = await self.userRepository.get_or_401(id)
+        user = await self.user_repository.get_or_401(id)
         return user.dict()
     
     async def get_agent(
@@ -33,8 +34,20 @@ class UserService:
             agent_id: int,
             ) -> dict:
         """Get agent"""
-        agent = await self.userRepository.get_agent_by_or_404(id=agent_id)
+        agent = await self.user_repository.get_agent_by_or_404(id=agent_id)
         return agent.dict()
+
+    async def get_agents_page(
+            self,
+            page: int,
+            elements: int,
+            ) -> Sequence[User]:
+        """Get agents page"""
+        return await self.user_repository.get_users_page_by(
+            offset=page-1,
+            limit=elements,
+            role="agent",
+            )
 
     async def add_review(
             self,
@@ -44,12 +57,12 @@ class UserService:
             comment: str,
             ) -> dict:
         """Post comment"""
-        user = await self.userRepository.get_or_401(current_user_id)
-        agent = await self.userRepository.get_agent_by_or_404(id=agent_id)
+        user = await self.user_repository.get_or_401(current_user_id)
+        agent = await self.user_repository.get_agent_by_or_404(id=agent_id)
         if user.id == agent.user_id:
             raise exceptions.InvalidReview
         
-        await self.userRepository.add_review(user.id, agent.id, rating, comment)
+        await self.user_repository.add_review(user.id, agent.id, rating, comment)
         
         return {"detail": "Comment added successfully"}
 
@@ -60,12 +73,12 @@ class UserService:
             new_password: str,
             ) -> dict:
         """Change user password"""
-        user = await self.userRepository.get_or_401(id)
+        user = await self.user_repository.get_or_401(id)
         if not user.verify_password(old_password):
             raise exceptions.InvalidCredentials
 
         user.change_password(new_password)
-        await self.userRepository.commit()
+        await self.user_repository.commit()
 
         return {"detail": "Password changed successfully"}
 
@@ -74,7 +87,7 @@ class UserService:
             email: str,
             ) -> dict:
         """Forgot password"""
-        user = await self.userRepository.get_user_by(email=email)
+        user = await self.user_repository.get_user_by(email=email)
         print(user)
         if user is None:
             raise exceptions.UserNotFound
@@ -101,9 +114,9 @@ class UserService:
         if user_id is None:
             raise exceptions.InvalidToken
 
-        user = await self.userRepository.get_or_401(user_id)
+        user = await self.user_repository.get_or_401(user_id)
         user.change_password(password)
-        await self.userRepository.commit()
+        await self.user_repository.commit()
 
         return {"detail": "Password reset successfully"}
 
@@ -112,7 +125,7 @@ class UserService:
             email: str,
             ) -> dict:
         """Send confirm email"""
-        user = await self.userRepository.get_user_by(email=email)
+        user = await self.user_repository.get_user_by(email=email)
         if user is None:
             raise exceptions.UserNotFound
 
@@ -138,9 +151,9 @@ class UserService:
         if user_id is None:
             raise exceptions.InvalidToken
 
-        user = await self.userRepository.get_or_401(user_id)
+        user = await self.user_repository.get_or_401(user_id)
         user.confirm_email()
-        await self.userRepository.commit()
+        await self.user_repository.commit()
 
         return {"detail": "Email confirmed successfully"}
     
@@ -150,9 +163,9 @@ class UserService:
             payload: dict,
             ) -> dict:
         """Update user"""
-        user = await self.userRepository.get_or_401(id)
+        user = await self.user_repository.get_or_401(id)
         user.update_user(payload)
-        await self.userRepository.commit()
+        await self.user_repository.commit()
 
         return {"detail": "User updated successfully"}
 
@@ -162,9 +175,9 @@ class UserService:
             payload: dict,
             ) -> dict:
         """Update agent"""
-        user = await self.userRepository.get_agent_by_or_404(user_id=id)
+        user = await self.user_repository.get_agent_by_or_404(user_id=id)
         user.update_agent(payload)
-        await self.userRepository.commit()
+        await self.user_repository.commit()
         
         return {"detail": "Agent updated successfully"}
 
@@ -173,10 +186,10 @@ class UserService:
             current_user_id: int,
             ) -> dict:
         """Delete user"""
-        current_user = await self.userRepository.get_or_401(current_user_id)
+        current_user = await self.user_repository.get_or_401(current_user_id)
 
-        await self.userRepository.delete(current_user)
-        await self.userRepository.commit()
+        await self.user_repository.delete(current_user)
+        await self.user_repository.commit()
         return {
             "detail": "User deleted successfully"
             }

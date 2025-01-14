@@ -5,7 +5,7 @@ from src.property.service import PropertyService
 from src.property.dependencies import get_property_service
 from src.auth.dependencies import get_current_user, get_current_user_optional
 from src.auth.schemas import TokenData
-from src.property.schemas import CreatePropertySchema, SearchPropertySchema
+from src.property.schemas import CreatePropertySchema, SearchPropertySchema, MapSearchSchema
 
 
 router = APIRouter(
@@ -23,10 +23,10 @@ async def get_properties_page(
 
 @router.get("/map")
 async def get_map_locations(
+    schema: MapSearchSchema = Depends(MapSearchSchema),
     property_service: PropertyService = Depends(get_property_service)
     ):
-    print("HERE IS THE MAP LOCATIONS")
-    return await property_service.get_map_locations()
+    return await property_service.get_map_locations(schema)
 
 @router.get("/record/{id}")
 async def get_property_by_id(
@@ -53,6 +53,7 @@ async def create_property(
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
     ):
+    print("USER DATA ", user)
     return await property_service.create_property(
         payload, files, user.user_id
     )
@@ -67,6 +68,15 @@ async def add_image_to_property(
     return await property_service.add_images_to_property(
         property_id, files, user.user_id)
 
+@router.post("/like/{property_id}")
+async def like_property(
+    property_id: int,
+    user: TokenData = Depends(get_current_user),
+    property_service: PropertyService = Depends(get_property_service)
+    ):
+    return await property_service.like_property(
+        property_id, user.user_id)
+
 @router.put("update/{id}")
 async def update_property(
     id: int,
@@ -74,7 +84,6 @@ async def update_property(
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
     ):
-    print("HERE IS THE PAYLOAD", payload)
     return await property_service.update_property(
         id, payload, user.user_id)
 
@@ -85,7 +94,6 @@ async def delete_image_from_property(
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
     ):
-    print("HERE IS THE IMAGE ID", image_id)
     return await property_service.delete_image_from_property(
         id, image_id, user.user_id)
 

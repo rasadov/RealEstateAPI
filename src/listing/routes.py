@@ -24,6 +24,13 @@ async def get_listings_page(
     return await property_service.get_listings_page(
         page, elements)
 
+@router.get("/me")
+async def get_user_listings(
+    user: TokenData = Depends(get_current_user),
+    property_service: PropertyService = Depends(get_property_service)
+    ):
+    return await property_service.get_user_listings(user.user_id)
+
 @router.get("/record/{id}")
 async def get_listing_by_id(
     id: int,

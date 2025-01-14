@@ -9,10 +9,12 @@ from fastapi import UploadFile
 
 from src.base.repository import BaseRepository
 from src.staticfiles.manager import BaseStaticFilesManager
-from src.property.models import Property, PropertyImage, PropertyInfo, PropertyLocation, PropertyBuilding
-from src.user.models import Approval
+from src.property.models import (Property, PropertyImage,
+                                 PropertyInfo, PropertyLocation,
+                                 PropertyBuilding, PropertyLike)
+from src.user.models import Approval, User
 from src.property import exceptions
-from src.property.schemas import CreatePropertySchema
+from src.property.schemas import CreatePropertySchema, MapSearchSchema
 from src.listing.schemas import CreateListingSchema
 from src.listing.models import Listing, ListingImage
 from src.celery.tasks import queue_delete_property
@@ -23,20 +25,55 @@ class PropertyRepository(BaseRepository[Property]):
 
     staticFilesManager: BaseStaticFilesManager
 
-    async def get_map_locations(self) -> Sequence[PropertyLocation]:
+    def _get_filter_conditions(
+            self,
+            filters: list[tuple]
+        ) -> list:
+        filter_conditions = [
+            Property.is_active == True,
+            Property.is_sold == False,
+            Property.approved == True,
+        ]
+
+        operator_mapping = {
+            ">=": "__ge__",
+            "<=": "__le__",
+            "==": "__eq__",
+        }
+
+        for value, attr_path, op in filters:
+            if "." in attr_path:
+                base_attr, related_attr = attr_path.split(".")
+                attr = getattr(getattr(Property, base_attr).property.mapper.class_, related_attr)
+            else:
+                attr = getattr(Property, attr_path)
+            filter_conditions.append(getattr(attr, operator_mapping[op])(value))
+
+        return filter_conditions
+
+    async def get_map_locations(
+            self,
+            filters: list[tuple],
+    ) -> Sequence[PropertyLocation]:
         """Get map locations"""
+        filter_conditions = self._get_filter_conditions(filters)
+
         result = await self.session.execute(
-            select(PropertyLocation)
-            .join(PropertyLocation.property)
-            .filter(
+            select(Property.id, PropertyLocation.latitude, PropertyLocation.longitude).
+            options(
+            joinedload(Property.owner),
+            joinedload(Property.images),
+            joinedload(Property.location),
+            joinedload(Property.info)
+            ).filter(
                 and_(
-                    Property.is_active == True,
-                    Property.is_sold == False,
-                    Property.approved == True
+                    *filter_conditions
+                    )
+                ).order_by(
+                    Property.created_at.desc()
                 )
-            )
         )
-        return result.scalars().all()
+        return result.scalars().unique().all()
 
     async def get_at_location(
             self,
@@ -250,6 +287,25 @@ class PropertyRepository(BaseRepository[Property]):
         )
         return result.scalars().unique().all()
 
+    async def get_my_listings(
+            self,
+            agent_id: int):
+        result = await self.session.execute(
+            select(Listing)
+            .options(
+                joinedload(Listing.agent),
+                joinedload(Listing.properties)
+                .options(
+                    joinedload(Property.location),
+                    joinedload(Property.info),
+                    joinedload(Property.images)
+                ),
+                joinedload(Listing.images)
+            )
+            .filter(Listing.agent_id == agent_id)
+        )
+        return result.scalars().all()
+
     async def get_properties_page_by(
             self,
             limit: int,
@@ -363,6 +419,36 @@ class PropertyRepository(BaseRepository[Property]):
         if not image:
             raise exceptions.ListingImageNotFound
         return image
+    
+    async def get_like(
+            self, user_id: int, property_id: int
+        ) -> bool:
+        """Get like"""
+        result = await self.session.execute(
+            select(PropertyLike).filter_by(
+                user_id=user_id,
+                property_id=property_id,
+                ))
+        return bool(result.scalars().first())
+
+    async def get_favorites_page(
+            self,
+            user_id: int,
+            limit: int,
+            offset: int,
+            ) -> Sequence[Property]:
+        """Get favorites page"""
+        result = await self.session.execute(
+            select(Property)
+            .join(Property.likes)
+            .filter(
+                PropertyLike.user_id == user_id
+            )
+            .order_by(PropertyLike.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return result.scalars().all() 
     
     async def create_listing(
             self,
@@ -578,3 +664,34 @@ class PropertyRepository(BaseRepository[Property]):
         prop.deactivate()
         await self.commit()
         queue_delete_property.delay(prop.id)
+
+    async def like_property(
+        self,
+        property_id: int,
+        user_id: int,
+        ) -> None:
+        """Like property"""
+        like = PropertyLike(
+            property_id=property_id,
+            user_id=user_id
+        )
+        self.add(like)
+        await self.commit()
+
+    async def unlike_property(
+        self,
+        property_id: int,
+        user_id: int,
+        ) -> None:
+        """Unlike property"""
+        await self.session.execute(
+            select(PropertyLike)
+            .filter(
+                and_(
+                    PropertyLike.property_id == property_id,
+                    PropertyLike.user_id == user_id
+                )
+            )
+            .delete()
+        )
+        await self.commit()

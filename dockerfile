@@ -18,6 +18,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /src
 
-# Make port 8000 available
+# Make port 5001 available
 
-EXPOSE 8000
+EXPOSE 5001

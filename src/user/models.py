@@ -26,7 +26,7 @@ class User(CreateTimestampMixin):
 
     agent: Mapped["Agent"] = relationship("Agent", uselist=False, back_populates="user")
     image: Mapped["UserProfileImage"] = relationship(
-        "UserProfileImage", uselist=False, back_populates="user"
+        "UserProfileImage", uselist=False, back_populates="user",
     )
     approvals: Mapped[list["Approval"]] = relationship(
         "Approval", back_populates="user"
@@ -35,7 +35,7 @@ class User(CreateTimestampMixin):
     @property
     def image_url(self) -> str:
         """Get user image url"""
-        return self.image.image_url if self.image else None
+        return self.image.image_url if self.image else "https://flattybucket.s3.us-east-1.amazonaws.com/uploads/user.jpg"
 
     def update_user(self, payload: dict) -> None:
         """Update user"""
@@ -55,7 +55,7 @@ class User(CreateTimestampMixin):
             "bio": self.bio,
             "role": self.role,
             "level": self.level,
-            "created_at": self.created_at,
+            "created_at": self.created_at.isoformat(),
             "image_url": self.image_url,
         }
 
@@ -95,6 +95,7 @@ class Agent(CustomBase):
     serial_number: Mapped[str] = mapped_column(String, nullable=False)
     company: Mapped[str] = mapped_column(String, nullable=True)
     experience: Mapped[float] = mapped_column(Float, nullable=True)
+    sales: Mapped[int] = mapped_column(Integer, nullable=True)
     user: Mapped["User"] = relationship("User", back_populates="agent")
     properties: Mapped[list["Property"]] = relationship(
         "Property", back_populates="owner"
@@ -126,7 +127,7 @@ class Agent(CustomBase):
         for key, value in payload.items():
             print("KEY", key)
             print("VALUE", value)
-            if key in ("serial_number", "company", "experience"):
+            if key in ("serial_number", "company", "experience", "sales"):
                 setattr(self, key, value)
             elif key in ("name", "phone", "bio"):
                 setattr(self.user, key, value)

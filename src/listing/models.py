@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, String, Boolean
+from sqlalchemy import ForeignKey, Integer, String, Boolean, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.base.models import CustomBase, ImageMixin
@@ -21,6 +21,9 @@ class Listing(CustomBase):
         Integer, ForeignKey("AgentModel.id"), nullable=False
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    longitude: Mapped[float] = mapped_column(Float, nullable=True)
+    latitude: Mapped[float] = mapped_column(Float, nullable=True)
+    address: Mapped[str] = mapped_column(String, nullable=True)
 
     properties: Mapped[list["Property"]] = relationship(
         "Property", cascade="all, delete-orphan"

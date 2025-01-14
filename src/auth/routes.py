@@ -17,6 +17,7 @@ async def register(
     user: dict,
     auth_service: AuthService = Depends(get_auth_service),
     ):
+    print("Here is the ", user)
     return await auth_service.register(user)
 
 @router.post("/login")
@@ -57,4 +58,5 @@ async def refresh_token(
     request: Request,
     auth_service: AuthService = Depends(get_auth_service),
     ):
+    print("Here is the ", request)
     return await auth_service.refresh_tokens(request)

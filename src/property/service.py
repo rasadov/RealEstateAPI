@@ -7,7 +7,7 @@ from src.property.repository import PropertyRepository
 from src.property import exceptions
 from src.property.models import Property, PropertyLocation
 from src.listing.models import Listing
-from src.property.schemas import CreatePropertySchema, SearchPropertySchema
+from src.property.schemas import CreatePropertySchema, SearchPropertySchema, MapSearchSchema
 from src.listing.schemas import CreateListingSchema
 from src.user.repository import UserRepository
 from src.auth.schemas import TokenData
@@ -73,9 +73,11 @@ class PropertyService:
 
     async def get_map_locations(
             self,
+            schema: MapSearchSchema,
             ) -> Sequence[PropertyLocation]:
         """Get map locations"""
-        return await self.property_repository.get_map_locations()
+        filters = schema.get_filters()
+        return await self.property_repository.get_map_locations(filters)
     
     async def get_at_location(
             self,
@@ -96,6 +98,14 @@ class PropertyService:
         if not listing:
             raise exceptions.ListingNotFound
         return listing
+
+    async def get_user_listings(
+            self,
+            user_id: int,
+            ) -> Sequence[Listing]:
+        """Get user listings"""
+        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
+        return await self.property_repository.get_my_listings(agent.id)
 
     async def get_listings_page(
             self,
@@ -124,6 +134,7 @@ class PropertyService:
             user_id: int,
             ) -> Property:
         """Create property"""
+        print("HERE IS THE USER ID", user_id)
         agent = await self.user_repository.get_agent_by_or_401(user_id=user_id)
 
         return await self.property_repository.create_property(
@@ -258,9 +269,9 @@ class PropertyService:
 
         if listing.agent_id != agent.id:
             raise auth_exceptions.Unauthorized
-        
+
         return await self.property_repository.delete_image_from_listing(image_id)
-    
+
     async def delete_listing(
             self,
             listing_id: int,
@@ -274,3 +285,20 @@ class PropertyService:
             raise auth_exceptions.Unauthorized
 
         return await self.property_repository.delete_listing(listing_id)
+
+    async def like_property(
+            self,
+            property_id: int,
+            user_id: int,
+            ) -> dict:
+        """Like property"""
+        user = await self.user_repository.get_or_401(user_id)
+        property = await self.property_repository.get_or_404(property_id)
+        liked = await self.property_repository.get_like(user_id, property_id)
+
+        if liked:
+            await self.property_repository.unlike_property(property.id, user.id)
+            return {"detail": "Property unliked successfully"}
+
+        await self.property_repository.like_property(property.id, user.id)
+        return {"detail": "Property liked successfully"}

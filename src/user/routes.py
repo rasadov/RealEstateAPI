@@ -23,6 +23,15 @@ async def get_user(
         user.user_id,
         )
 
+@router.get("/me/agent")
+async def get_user(
+    user: TokenData = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service)
+    ):
+    return await user_service.user_repository.get_agent_by(
+        user_id=user.user_id,
+        )
+
 @router.get("/agent/{agent_id}")
 async def get_agent(
     agent_id: int,
@@ -30,6 +39,16 @@ async def get_agent(
     ):
     return await user_service.get_agent(
         agent_id,
+        )
+
+@router.get("/page/agents")
+async def get_agents_page(
+    page: int = 1,
+    elements: int = 10,
+    user_service: UserService = Depends(get_user_service)
+    ):
+    return await user_service.get_agents_page(
+        page, elements,
         )
 
 @router.post("/forgot-password")
@@ -88,13 +107,11 @@ async def reset_password(
 
 @router.patch("/confirm-email")
 async def confirm_email(
-    schema: ResetPasswordSchema,
     token: str,
     user_service: UserService = Depends(get_user_service)
     ):
     return await user_service.confirm_email(
         token,
-        schema.password,
         )
 
 @router.patch("/update/user")

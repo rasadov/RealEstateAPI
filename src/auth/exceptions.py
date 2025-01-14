@@ -33,7 +33,7 @@ class CredentialsException(HTTPException):
 class TokenNotFound(HTTPException):
     def __init__(self):
         super().__init__(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token not found",
         )
 

@@ -42,6 +42,7 @@ class Property(CreateTimestampMixin):
         "PropertyBuilding", uselist=False, back_populates="property", cascade="all, delete-orphan"
     )
     listing: Mapped["Listing"] = relationship("Listing", back_populates="properties")
+    likes: Mapped[list["PropertyLike"]] = relationship("PropertyLike", back_populates="property")
 
     def approve(self) -> None:
         self.approved = True
@@ -132,6 +133,22 @@ class PropertyReport(CreateTimestampMixin):
     )
     reason: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
+
+    property: Mapped["Property"] = relationship("Property")
+    user: Mapped["User"] = relationship("User")
+
+
+class PropertyLike(CreateTimestampMixin):
+    """Property like model."""
+
+    __tablename__ = "PropertyLikeModel"
+
+    property_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("PropertyModel.id"), nullable=False
+    )
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("UserModel.id"), nullable=False
+    )
 
     property: Mapped["Property"] = relationship("Property")
     user: Mapped["User"] = relationship("User")

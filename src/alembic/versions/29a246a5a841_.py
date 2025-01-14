@@ -104,6 +104,15 @@ def upgrade():
         sa.Column('property_id', sa.Integer(), sa.ForeignKey('PropertyModel.id'), nullable=False),
     )
 
+    # Create PropertyLikeModel table
+    op.create_table(
+        'PropertyLikeModel',
+        sa.Column('id', sa.Integer(), primary_key=True, autoincrement=True),
+        sa.Column('user_id', sa.Integer(), sa.ForeignKey('UserModel.id'), nullable=False),
+        sa.Column('property_id', sa.Integer(), sa.ForeignKey('PropertyModel.id'), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
+    )
+
 
 def downgrade():
     # Drop tables in reverse order of creation

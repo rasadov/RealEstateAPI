@@ -75,7 +75,7 @@ class UserRepository(BaseRepository[User]):
 
     async def get_agent_by(
             self,
-            exception: Exception,
+            exception: Exception = None,
             **kwargs,
             ) -> Agent:
         """Get agent by any field"""

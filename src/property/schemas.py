@@ -8,7 +8,6 @@ from src.base.schemas import as_form
 
 @as_form
 class CreatePropertySchema(BaseModel):
-    name: str
     description: str
     price: float
     latitude: float
@@ -16,24 +15,30 @@ class CreatePropertySchema(BaseModel):
     category: str
     total_area: float
     living_area: float
-    apartment_area: float
-    kitchen_area: float
     rooms: int
     bathrooms: int
     living_rooms: int
     floor: int
     floors: int
-    district: str
-    address: str
-    balcony: str
-    view: str
-    year_built: int
-    building_type: str
-    elevators: int
-    parking: str
-    flooring_type: str
-    owner_id: int
+    district: Optional[str]
+    address: Optional[str]
+    balcony: Optional[str]
+    view: Optional[str]
+    year_built: Optional[int]
+    building_type: Optional[str]
+    elevators: Optional[int]
+    parking: Optional[str]
+    flooring_type: Optional[str]
+    # owner_id: int
 
+class MapSearchSchema(BaseModel):
+    min_area: Optional[float] = None
+    max_area: Optional[float] = None
+    min_price: Optional[float] = None
+    max_price: Optional[float] = None
+    rooms: Optional[int] = None
+    category: Optional[str] = None
+    district: Optional[str] = None
 
 class SearchPropertySchema(BaseModel):
     page: int = 1
@@ -46,7 +51,7 @@ class SearchPropertySchema(BaseModel):
     category: Optional[str] = None
     district: Optional[str] = None
 
-    def get_filters(self) -> dict:
+    def get_filters(self) -> list[tuple]:
         filters = []
         if self.min_area:
             filters.append((self.min_area, "info.total_area", ">="))

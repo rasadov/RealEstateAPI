@@ -37,7 +37,7 @@ def upgrade():
         'UserImageModel',
         sa.Column('id', sa.Integer(), primary_key=True, autoincrement=True),
         sa.Column('user_id', sa.Integer(), sa.ForeignKey('UserModel.id'), nullable=False),
-        sa.Column('image_url', sa.String(), nullable=True),
+        sa.Column('image_url', sa.String(), nullable=True, default='https://flattybucket.s3.us-east-1.amazonaws.com/uploads/user.jpg'),
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
     )
 
@@ -49,6 +49,7 @@ def upgrade():
         sa.Column('serial_number', sa.String(), nullable=False),
         sa.Column('company', sa.String(), nullable=True),
         sa.Column('experience', sa.Float(), nullable=True),
+        sa.Column('sales', sa.Integer(), nullable=True, default=0),
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
     )
 
