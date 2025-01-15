@@ -27,7 +27,7 @@ async def test_property_search():
     }
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            "http://localhost:8000/api/v1/property/",
+            "http://localhost:5001/api/v1/property/",
             params=params,
             headers={
             "Accept": "application/json",
@@ -43,7 +43,7 @@ async def test_property_search():
 async def test_property_search_2():
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            "http://localhost:8000/api/v1/property/",
+            "http://localhost:5001/api/v1/property/",
         )
 
     print("TEST PROPERTY SEARCH")
@@ -56,7 +56,7 @@ async def test_property_search_by_id():
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            f"http://localhost:8000/api/v1/property/record/{property_id}",
+            f"http://localhost:5001/api/v1/property/record/{property_id}",
         )
     
     print("TEST PROPERTY SEARCH BY ID")
@@ -70,7 +70,7 @@ async def test_property_search_by_id():
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            f"http://localhost:8000/api/v1/property/record/{property_id}",
+            f"http://localhost:5001/api/v1/property/record/{property_id}",
         )
     
     print("TEST PROPERTY SEARCH BY ID")
@@ -83,7 +83,7 @@ async def test_property_search_by_agent():
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            f"http://localhost:8000/api/v1/property/agent/{agent_id}/page",
+            f"http://localhost:5001/api/v1/property/agent/{agent_id}/page",
         )
 
     print("TEST PROPERTY SEARCH BY AGENT")
@@ -96,7 +96,7 @@ async def test_property_search_by_agent_2():
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            f"http://localhost:8000/api/v1/property/agent/{agent_id}/page",
+            f"http://localhost:5001/api/v1/property/agent/{agent_id}/page",
             params={
             "page": "1",
             "elements": "10"
@@ -117,7 +117,7 @@ async def test_filtering_properties():
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            "http://localhost:8000/api/v1/property/",
+            "http://localhost:5001/api/v1/property/",
             params=params
         )
 
@@ -135,7 +135,7 @@ async def test_filtering_properties_2():
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            "http://localhost:8000/api/v1/property/",
+            "http://localhost:5001/api/v1/property/",
             params=params
         )
 
@@ -147,7 +147,7 @@ async def test_filtering_properties_2():
 async def test_map():
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            "http://localhost:8000/api/v1/property/map"
+            "http://localhost:5001/api/v1/property/map"
         )
 
     print("TEST MAP")
@@ -159,7 +159,7 @@ async def test_map():
 async def test_listings():
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            "http://localhost:8000/api/v1/listing/page",
+            "http://localhost:5001/api/v1/listing/page",
             params={
                 "offset": 0,
                 "elements": 10
@@ -184,7 +184,7 @@ async def test_listings_creation():
     async with httpx.AsyncClient() as client:
         client.cookies = cookies
         response = await client.post(
-            "http://localhost:8000/api/v1/listing/",
+            "http://localhost:5001/api/v1/listing/",
             data=data,
             files=files,
             headers={
@@ -204,7 +204,7 @@ async def test_listing_by_id():
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            f"http://localhost:8000/api/v1/listing/record/{listing_id}"
+            f"http://localhost:5001/api/v1/listing/record/{listing_id}"
         )
 
     print("TEST LISTING BY ID")
@@ -223,25 +223,34 @@ async def test_property_creation():
     refresh_token = agent_response.cookies["refresh_token"]
     
     data = {
-        "name": "test_property",
-        "description": "test_description",
-        "price": "1000.0",  # Ensure all values are strings for form data
-        "latitude": "0.0",
-        "longitude": "0.0",
         "category": "apartment",
-        "total_area": "100.0",
-        "living_area": "50.0",
-        "bedrooms": "2",
-        "living_rooms": "1",
-        "floor": "1",
-        "floors": "5",
-        "district": "test_district",
-        "address": "test_address"
+        "residentialComplex": "Sunset Villas",
+        "description": "A beautiful apartment with a stunning view.",
+        "price": 250000.0,
+        "currency": "$",
+        "latitude": 34.052235,
+        "longitude": -118.243683,
+        "address": "1234 Sunset Blvd, Los Angeles, CA",
+        "floor": 5,
+        "totalArea": 120.0,
+        "livingArea": 100.0,
+        "livingRoom": 1,
+        "bedroom": 2,
+        "balcony": 1,
+        "bathroom": 2,
+        "buildingFloors": 10,
+        "year": 2015,
+        "condition": "Excellent",
+        "apartmentStories": 1,
+        "elevator": True,
+        "parkingSlot": True,
+        "installment": False,
+        "swimmingPool": True
     }
     
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            "http://localhost:8000/api/v1/property/create",
+            "http://localhost:5001/api/v1/property/create",
             data=data,
             files=files,
             headers={
@@ -270,7 +279,7 @@ async def test_property_creation():
 
 #     async with httpx.AsyncClient() as client:
 #         response = await client.post(
-#             f"http://localhost:8000/api/v1/property/image/{property_id}",
+#             f"http://localhost:5001/api/v1/property/image/{property_id}",
 #             files=files,
 #             headers={
 #                 "Authorization": f"Bearer {access_token}",
@@ -296,7 +305,7 @@ async def test_property_creation():
 
 #     async with httpx.AsyncClient() as client:
 #         response = await client.post(
-#             f"http://localhost:8000/api/v1/property/image/{property_id}",
+#             f"http://localhost:5001/api/v1/property/image/{property_id}",
 #             files=files,
 #             headers={
 #                 "Authorization": f"Bearer {access_token}",
@@ -339,7 +348,7 @@ async def test_property_creation():
 #         }
 
 #     response = httpx.put(
-#         f"http://localhost:8000/api/v1/property/{property_id}",
+#         f"http://localhost:5001/api/v1/property/{property_id}",
 #         json=new_data,
 #         headers={
 #             "Authorization": f"Bearer {access_token}",
@@ -364,7 +373,7 @@ async def test_property_creation():
 
     # async with httpx.AsyncClient() as client:
     #     response = await client.delete(
-    #         f"http://localhost:8000/api/v1/property/{property_id}",
+    #         f"http://localhost:5001/api/v1/property/{property_id}",
     #         headers={
     #             "Authorization": f"Bearer {access_token}",
     #         },
@@ -385,7 +394,7 @@ async def test_property_creation():
 
 #     async with httpx.AsyncClient() as client:
 #         response = await client.delete(
-#             f"http://localhost:8000/api/v1/property/{property_id}",
+#             f"http://localhost:5001/api/v1/property/{property_id}",
 #             headers={
 #                 "Authorization": f"Bearer {access_token}",
 #             },
@@ -407,7 +416,7 @@ async def test_property_creation():
 
 #     async with httpx.AsyncClient() as client:
 #         response = await client.delete(
-#             f"http://localhost:8000/api/v1/property/{property_id}/image/{image_id}",
+#             f"http://localhost:5001/api/v1/property/{property_id}/image/{image_id}",
 #             headers={
 #                 "Authorization": f"Bearer {access_token}",
 #             },

@@ -16,14 +16,26 @@ class Listing(CustomBase):
     __tablename__ = "ListingModel"
 
     name: Mapped[str] = mapped_column(String, nullable=False)
+    category: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
-    agent_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("AgentModel.id"), nullable=False
-    )
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     longitude: Mapped[float] = mapped_column(Float, nullable=True)
     latitude: Mapped[float] = mapped_column(Float, nullable=True)
     address: Mapped[str] = mapped_column(String, nullable=True)
+    building_area: Mapped[float] = mapped_column(Float, nullable=True)
+    living_area: Mapped[float] = mapped_column(Float, nullable=True)
+    objects: Mapped[int] = mapped_column(Integer, nullable=True)
+    year: Mapped[int] = mapped_column(Integer, nullable=True)
+    building_floors: Mapped[int] = mapped_column(Integer, nullable=True)
+    elevators: Mapped[bool] = mapped_column(Boolean, nullable=True)
+    parking: Mapped[bool] = mapped_column(Boolean, nullable=True)
+    installment: Mapped[bool] = mapped_column(Boolean, nullable=True)
+    swimming_pool: Mapped[bool] = mapped_column(Boolean, nullable=True)
+
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    agent_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("AgentModel.id"), nullable=False
+    )
 
     properties: Mapped[list["Property"]] = relationship(
         "Property", cascade="all, delete-orphan"

@@ -15,9 +15,11 @@ class Property(CreateTimestampMixin):
 
     __tablename__ = "PropertyModel"
 
-    name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
+    views: Mapped[int] = mapped_column(Integer, default=0)
     price: Mapped[float] = mapped_column(Float, nullable=False)
+    currency: Mapped[str] = mapped_column(String, nullable=False, default="$")
+    original_price: Mapped[float] = mapped_column(Float, nullable=True)
     approved: Mapped[bool] = mapped_column(Boolean, default=False)
     is_sold: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -69,6 +71,7 @@ class PropertyLocation(LocationMixin):
 
     __tablename__ = "PropertyLocationModel"
 
+    address: Mapped[str] = mapped_column(String, nullable=True)
     property_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("PropertyModel.id"), nullable=False
     )
@@ -84,20 +87,17 @@ class PropertyInfo(CustomBase):
     property_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("PropertyModel.id"), nullable=False
     )
-    category: Mapped[str] = mapped_column(String, nullable=False)
-    apartment_area: Mapped[float] = mapped_column(Float, nullable=False)
-    total_area: Mapped[float] = mapped_column(Float, nullable=False)
-    kitchen_area: Mapped[float] = mapped_column(Float, nullable=False)
-    living_area: Mapped[float] = mapped_column(Float, nullable=False)
-    bathrooms: Mapped[int] = mapped_column(Integer, nullable=False)
-    rooms: Mapped[int] = mapped_column(Integer, nullable=False)
-    living_rooms: Mapped[int] = mapped_column(Integer, nullable=False)
-    floor: Mapped[int] = mapped_column(Integer, nullable=False)
-    floors: Mapped[int] = mapped_column(Integer, nullable=False)
-    district: Mapped[str] = mapped_column(String, nullable=False)
-    address: Mapped[str] = mapped_column(String, nullable=False)
-    balcony: Mapped[str] = mapped_column(String, nullable=False)
-    view: Mapped[str] = mapped_column(String, nullable=False)
+    category: Mapped[str] = mapped_column(String, nullable=True)
+    total_area: Mapped[float] = mapped_column(Float, nullable=True)
+    living_area: Mapped[float] = mapped_column(Float, nullable=True)
+    bathrooms: Mapped[int] = mapped_column(Integer, nullable=True)
+    bedrooms: Mapped[int] = mapped_column(Integer, nullable=True)
+    living_rooms: Mapped[int] = mapped_column(Integer, nullable=True)
+    floor: Mapped[int] = mapped_column(Integer, nullable=True)
+    floors: Mapped[int] = mapped_column(Integer, nullable=True)
+    balcony: Mapped[int] = mapped_column(Integer, nullable=True)
+    condition: Mapped[str] = mapped_column(String, nullable=True)
+    apartment_stories: Mapped[int] = mapped_column(Integer, nullable=True)
 
     property: Mapped["Property"] = relationship("Property", back_populates="info")
 
@@ -111,11 +111,11 @@ class PropertyBuilding(CustomBase):
         Integer, ForeignKey("PropertyModel.id"), nullable=False
     )
 
-    year_built: Mapped[int] = mapped_column(Integer, nullable=False)
-    elevators: Mapped[int] = mapped_column(Integer, nullable=False)
-    building_type: Mapped[str] = mapped_column(String, nullable=False)
-    flooring_type: Mapped[str] = mapped_column(String, nullable=False)
-    parking: Mapped[str] = mapped_column(String, nullable=False)
+    year_built: Mapped[int] = mapped_column(Integer, nullable=True)
+    elevators: Mapped[bool] = mapped_column(Boolean, nullable=True)
+    parking: Mapped[bool] = mapped_column(Boolean, nullable=True)
+    installment: Mapped[bool] = mapped_column(Boolean, nullable=True)
+    swimming_pool: Mapped[bool] = mapped_column(Boolean, nullable=True)
 
     property: Mapped["Property"] = relationship("Property", back_populates="building")
 

@@ -22,11 +22,24 @@ def upgrade():
     # Create ListingModel table
     op.create_table(
         'ListingModel',
-        sa.Column('id', sa.Integer(), primary_key=True, autoincrement=True),
-        sa.Column('name', sa.String(), nullable=False),
-        sa.Column('description', sa.String(), nullable=True),
-        sa.Column('agent_id', sa.Integer(), sa.ForeignKey('AgentModel.id'), nullable=False),
-        sa.Column('is_active', sa.Boolean(), default=True),
+        sa.Column('id', sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column('name', sa.String, nullable=False),
+        sa.Column('category', sa.String, nullable=False),
+        sa.Column('description', sa.String, nullable=True),
+        sa.Column('longitude', sa.Float, nullable=True),
+        sa.Column('latitude', sa.Float, nullable=True),
+        sa.Column('address', sa.String, nullable=True),
+        sa.Column('building_area', sa.Float, nullable=True),
+        sa.Column('living_area', sa.Float, nullable=True),
+        sa.Column('objects', sa.Integer, nullable=True),
+        sa.Column('year', sa.Integer, nullable=True),
+        sa.Column('building_floors', sa.Integer, nullable=True),
+        sa.Column('elevators', sa.Boolean, nullable=True),
+        sa.Column('parking', sa.Boolean, nullable=True),
+        sa.Column('installment', sa.Boolean, nullable=True),
+        sa.Column('swimming_pool', sa.Boolean, nullable=True),
+        sa.Column('is_active', sa.Boolean, default=True),
+        sa.Column('agent_id', sa.Integer, sa.ForeignKey('AgentModel.id'), nullable=False)
     )
 
     # Create ListingImageModel table

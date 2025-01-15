@@ -26,7 +26,19 @@ async def get_map_locations(
     schema: MapSearchSchema = Depends(MapSearchSchema),
     property_service: PropertyService = Depends(get_property_service)
     ):
-    return await property_service.get_map_locations(schema)
+    result = await property_service.get_map_locations(schema)
+    print("RESULT ", result)
+    return result
+
+@router.get("/fav")
+async def get_fav_properties(
+    user: TokenData = Depends(get_current_user),
+    property_service: PropertyService = Depends(get_property_service)
+    ):
+    offset = 0
+    limit = 10
+    return await property_service.property_repository.get_favorites_page(
+        user.user_id, limit, offset)
 
 @router.get("/record/{id}")
 async def get_property_by_id(

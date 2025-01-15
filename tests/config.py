@@ -16,7 +16,7 @@ TEST_CLIENT_PASS = os.getenv("CLIENT_PASSWORD")
 
 with httpx.Client() as client:
     codes = []
-    response = client.post("http://localhost:8000/api/v1/auth/login", json={
+    response = client.post("http://localhost:5001/api/v1/auth/login", json={
         "email": TEST_MODERATOR_EMAIL,
         "password": TEST_MODERATOR_PASS
     })
@@ -24,7 +24,7 @@ with httpx.Client() as client:
     codes.append(response.status_code)
 
     if response.status_code > 299:
-        response = client.post("http://localhost:8000/api/v1/auth/register", json={
+        response = client.post("http://localhost:5001/api/v1/auth/register", json={
             "name": "testname",
             "email": TEST_MODERATOR_EMAIL,
             "password": TEST_MODERATOR_PASS,
@@ -33,14 +33,14 @@ with httpx.Client() as client:
 
         codes.append(response.status_code)
     
-    response = client.post("http://localhost:8000/api/v1/auth/login", json={
+    response = client.post("http://localhost:5001/api/v1/auth/login", json={
         "email": TEST_AGENT_EMAIL,
         "password": TEST_AGENT_PASS
     })
     codes.append(response.status_code)
 
     if response.status_code > 299:
-        response = client.post("http://localhost:8000/api/v1/auth/register", json={
+        response = client.post("http://localhost:5001/api/v1/auth/register", json={
             "name": "testname",
             "email": TEST_AGENT_EMAIL,
             "password": TEST_AGENT_PASS,
@@ -49,14 +49,14 @@ with httpx.Client() as client:
         })
         codes.append(response.status_code)
 
-    response = client.post("http://localhost:8000/api/v1/auth/login", json={
+    response = client.post("http://localhost:5001/api/v1/auth/login", json={
         "email": TEST_CLIENT_EMAIL,
         "password": TEST_CLIENT_PASS
     })
     codes.append(response.status_code)
 
     if response.status_code > 299:
-        response = client.post("http://localhost:8000/api/v1/auth/register", json={
+        response = client.post("http://localhost:5001/api/v1/auth/register", json={
             "name": "testname",
             "email": TEST_CLIENT_EMAIL,
             "password": TEST_CLIENT_PASS,

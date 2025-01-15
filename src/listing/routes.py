@@ -41,13 +41,13 @@ async def get_listing_by_id(
 @router.post("/")
 async def create_listing(
     schema: CreateListingSchema = Depends(CreateListingSchema.as_form),
-    images: list[UploadFile] = File(...),
+    files: list[UploadFile] = File(...),
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
     ):
     print("HERE IS THE SCHEMA", schema)
     return await property_service.create_listing(
-        schema, images, user.user_id)
+        schema, files, user.user_id)
 
 @router.post("/image/{listing_id}")
 async def add_image_to_listing(

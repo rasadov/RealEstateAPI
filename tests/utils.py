@@ -47,7 +47,7 @@ def generate_register_credentials() -> httpx.Response:
     return f"testemail{rand}@test.com", f"testpassword{rand}"
 
 def login_or_register_user(email: str, password: str) -> httpx.Response:
-    response = httpx.post("http://localhost:8000/api/v1/auth/register", json={
+    response = httpx.post("http://localhost:5001/api/v1/auth/register", json={
         "name": "testname",
         "email": email,
         "password": password,
@@ -55,7 +55,7 @@ def login_or_register_user(email: str, password: str) -> httpx.Response:
     })
 
     if response.status_code > 299:
-        response = httpx.post("http://localhost:8000/api/v1/auth/login", json={
+        response = httpx.post("http://localhost:5001/api/v1/auth/login", json={
             "email": email,
             "password": password
         })
@@ -63,7 +63,7 @@ def login_or_register_user(email: str, password: str) -> httpx.Response:
     return response
 
 def login_or_register_agent(email: str, password: str) -> httpx.Response:
-    response = httpx.post("http://localhost:8000/api/v1/auth/register", json={
+    response = httpx.post("http://localhost:5001/api/v1/auth/register", json={
         "name": "testname",
         "email": email,
         "password": password,
@@ -72,7 +72,7 @@ def login_or_register_agent(email: str, password: str) -> httpx.Response:
     })
 
     if response.status_code > 299:
-        response = httpx.post("http://localhost:8000/api/v1/auth/login", json={
+        response = httpx.post("http://localhost:5001/api/v1/auth/login", json={
             "email": email,
             "password": password
         })

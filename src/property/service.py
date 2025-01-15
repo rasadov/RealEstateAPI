@@ -12,6 +12,7 @@ from src.listing.schemas import CreateListingSchema
 from src.user.repository import UserRepository
 from src.auth.schemas import TokenData
 from src.auth import exceptions as auth_exceptions
+from src.listing import exceptions as listing_exceptions
 
 @dataclass
 class PropertyService:
@@ -46,7 +47,8 @@ class PropertyService:
 
         properties = await self.property_repository.get_properties_page(
             schema.elements, offset, filters)
-        count = await self.property_repository.get_properties_count()
+        count = await self.property_repository.get_properties_count_filtered(
+            filters)
 
         return {
             "properties": properties,
@@ -88,6 +90,11 @@ class PropertyService:
         return await self.property_repository.get_at_location(
             latitude, longitude)
 
+    # async def get_listing_names(
+    #         self, agent_id: int) -> Sequence[str]:
+    #     """Get listing names"""
+    #     return await self.property_repository.get_listing_names(agent_id)
+
     async def get_listing_by_id(
             self,
             id: int,
@@ -96,7 +103,7 @@ class PropertyService:
         listing = await self.property_repository.get_listing(id)
 
         if not listing:
-            raise exceptions.ListingNotFound
+            raise listing_exceptions.ListingNotFound
         return listing
 
     async def get_user_listings(
@@ -136,7 +143,15 @@ class PropertyService:
         """Create property"""
         print("HERE IS THE USER ID", user_id)
         agent = await self.user_repository.get_agent_by_or_401(user_id=user_id)
+        if schema.residentialComplex:
+            listing = await self.property_repository.get_listing_by(
+                name=schema.residentialComplex,
+                agent_id=agent.id
+                )
 
+            if listing:
+                return await self.property_repository.create_property(
+                    schema, images, agent.id, listing.id)
         return await self.property_repository.create_property(
             schema, images, agent.id)
     
@@ -179,7 +194,7 @@ class PropertyService:
             listing_id: int,
             images: list[UploadFile],
             user_id: int
-            ) -> Property:
+            ) -> None:
         """Add image to property"""
         agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
         listing = await self.property_repository.get_listing_or_404(listing_id)
@@ -189,7 +204,7 @@ class PropertyService:
 
         current_images = await self.property_repository.count_listing_images(listing.id)
         if current_images + len(images) > 10:
-            raise exceptions.ListingImagesLimitExceeded
+            raise listing_exceptions.ListingImagesLimitExceeded
 
         return await self.property_repository._add_images_to_listing(
             listing, images)
@@ -231,7 +246,7 @@ class PropertyService:
             property_id: int,
             image_id: int,
             user_id: int,
-            ) -> Property:
+            ) -> None:
         """Delete property image"""
         agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
         property = await self.property_repository.get_or_404(property_id)
@@ -246,7 +261,7 @@ class PropertyService:
             property_id: int,
             user_id: int,
             is_sold: bool,
-            ) -> Property:
+            ) -> None:
         """Delete property"""
         agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
         property = await self.property_repository.get_or_404(property_id)
@@ -262,7 +277,7 @@ class PropertyService:
             listing_id: int,
             image_id: int,
             user_id: int,
-            ) -> Listing:
+            ) -> None:
         """Delete listing image"""
         agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
         listing = await self.property_repository.get_listing_or_404(listing_id)
@@ -276,7 +291,7 @@ class PropertyService:
             self,
             listing_id: int,
             user_id: int,
-            ) -> Listing:
+            ) -> None:
         """Delete listing"""
         agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
         listing = await self.property_repository.get_listing_or_404(listing_id)

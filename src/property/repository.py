@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Sequence
 
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, delete
 from sqlalchemy.orm import joinedload
 from sqlalchemy.future import select
 from fastapi import UploadFile
@@ -12,8 +12,9 @@ from src.staticfiles.manager import BaseStaticFilesManager
 from src.property.models import (Property, PropertyImage,
                                  PropertyInfo, PropertyLocation,
                                  PropertyBuilding, PropertyLike)
-from src.user.models import Approval, User
+from src.user.models import Approval, User, Agent
 from src.property import exceptions
+from src.listing import exceptions as listing_exceptions
 from src.property.schemas import CreatePropertySchema, MapSearchSchema
 from src.listing.schemas import CreateListingSchema
 from src.listing.models import Listing, ListingImage
@@ -25,10 +26,8 @@ class PropertyRepository(BaseRepository[Property]):
 
     staticFilesManager: BaseStaticFilesManager
 
-    def _get_filter_conditions(
-            self,
-            filters: list[tuple]
-        ) -> list:
+    @staticmethod
+    def _get_filter_conditions(filters: list[tuple]) -> list:
         filter_conditions = [
             Property.is_active == True,
             Property.is_sold == False,
@@ -44,10 +43,20 @@ class PropertyRepository(BaseRepository[Property]):
         for value, attr_path, op in filters:
             if "." in attr_path:
                 base_attr, related_attr = attr_path.split(".")
-                attr = getattr(getattr(Property, base_attr).property.mapper.class_, related_attr)
+                # e.g. attr_path = "info.total_area"
+                # base_attr = "info", related_attr = "total_area"
+                # get Property.info.mapper.class_ => Info model, then get .total_area
+                attr = getattr(
+                    getattr(Property, base_attr).property.mapper.class_,
+                    related_attr
+                )
             else:
                 attr = getattr(Property, attr_path)
-            filter_conditions.append(getattr(attr, operator_mapping[op])(value))
+
+            # Build e.g. attr.__ge__(value), attr.__le__(value), or attr.__eq__(value)
+            filter_conditions.append(
+                getattr(attr, operator_mapping[op])(value)
+            )
 
         return filter_conditions
 
@@ -55,24 +64,30 @@ class PropertyRepository(BaseRepository[Property]):
             self,
             filters: list[tuple],
     ) -> Sequence[PropertyLocation]:
-        """Get map locations"""
-        filter_conditions = self._get_filter_conditions(filters)
+        """
+        Get map locations from PropertyLocation.
+        Joins Property to apply filters, but doesn't select everything.
+        """
+        # Convert your filter list into valid SQLAlchemy conditions
+        filter_conditions = PropertyRepository._get_filter_conditions(filters)
 
-        result = await self.session.execute(
-            select(Property.id, PropertyLocation.latitude, PropertyLocation.longitude).
-            options(
-            joinedload(Property.owner),
-            joinedload(Property.images),
-            joinedload(Property.location),
-            joinedload(Property.info)
-            ).filter(
-                and_(
-                    *filter_conditions
-                    )
-                ).order_by(
-                    Property.created_at.desc()
-                )
+        # Build the query:
+        # 1) Select from PropertyLocation
+        # 2) Join on Property to filter by property-specific conditions
+        # 3) Apply filter conditions
+        # 4) Order by Property.created_at (descending)
+
+        stmt = (
+            select(PropertyLocation)
+            .join(Property, PropertyLocation.property_id == Property.id)
+            .where(and_(*filter_conditions))
+            .order_by(Property.created_at.desc())
         )
+
+        # Execute the statement
+        result = await self.session.execute(stmt)
+
+        # Return unique location objects
         return result.scalars().unique().all()
 
     async def get_at_location(
@@ -144,7 +159,7 @@ class PropertyRepository(BaseRepository[Property]):
             .offset(offset)
         )
 
-        return result.scalars().all()
+        return result.scalars().unique().all()
 
     async def get_listings_count(
             self,
@@ -198,7 +213,7 @@ class PropertyRepository(BaseRepository[Property]):
         )
         listing = result.scalars().first()
         if not listing:
-            raise exceptions.ListingNotFound
+            raise listing_exceptions.ListingNotFound
         return listing
     
     async def get_listing_join_property(
@@ -249,26 +264,7 @@ class PropertyRepository(BaseRepository[Property]):
             filters: list[tuple],
             ) -> Sequence[Property]:
         """Get properties page"""
-        filter_conditions = [
-            Property.is_active == True,
-            Property.is_sold == False,
-            Property.approved == True,
-        ]
-
-        operator_mapping = {
-            ">=": "__ge__",
-            "<=": "__le__",
-            "==": "__eq__",
-        }
-
-        for value, attr_path, op in filters:
-            if "." in attr_path:
-                base_attr, related_attr = attr_path.split(".")
-                attr = getattr(getattr(Property, base_attr).property.mapper.class_, related_attr)
-            else:
-                attr = getattr(Property, attr_path)
-            filter_conditions.append(getattr(attr, operator_mapping[op])(value))
-
+        filter_conditions = PropertyRepository._get_filter_conditions(filters)
 
         result = await self.session.execute(
             select(Property).
@@ -287,6 +283,19 @@ class PropertyRepository(BaseRepository[Property]):
         )
         return result.scalars().unique().all()
 
+    async def get_properties_count_filtered(self, filters: list[tuple]) -> int:
+        """Get the number of properties matching the given filters."""
+        filter_conditions = self._get_filter_conditions(filters)
+
+        result = await self.session.execute(
+            select(func.count(Property.id)).filter(
+                and_(*filter_conditions)
+            )
+        )
+        # Depending on your SQLAlchemy version, you can use:
+        # return result.scalar_one()  # or .scalar()
+        return result.scalar()
+
     async def get_my_listings(
             self,
             agent_id: int):
@@ -304,7 +313,7 @@ class PropertyRepository(BaseRepository[Property]):
             )
             .filter(Listing.agent_id == agent_id)
         )
-        return result.scalars().all()
+        return result.scalars().unique().all()
 
     async def get_properties_page_by(
             self,
@@ -370,7 +379,8 @@ class PropertyRepository(BaseRepository[Property]):
         result = await self.session.execute(
             select(Property)
             .options(
-                joinedload(Property.owner),
+                joinedload(Property.owner).
+                joinedload(Agent.user),
                 joinedload(Property.location),
                 joinedload(Property.images),
                 joinedload(Property.info)
@@ -417,7 +427,7 @@ class PropertyRepository(BaseRepository[Property]):
         )
         image = result.scalars().first()
         if not image:
-            raise exceptions.ListingImageNotFound
+            raise listing_exceptions.ListingImageNotFound
         return image
     
     async def get_like(
@@ -441,6 +451,12 @@ class PropertyRepository(BaseRepository[Property]):
         result = await self.session.execute(
             select(Property)
             .join(Property.likes)
+            .options(
+                joinedload(Property.owner),
+                joinedload(Property.images),
+                joinedload(Property.location),
+                joinedload(Property.info)
+            )
             .filter(
                 PropertyLike.user_id == user_id
             )
@@ -448,20 +464,31 @@ class PropertyRepository(BaseRepository[Property]):
             .limit(limit)
             .offset(offset)
         )
-        return result.scalars().all() 
+        return result.scalars().unique().all()
     
     async def create_listing(
             self,
             schema: CreateListingSchema,
             images: list[UploadFile],
             agent_id: int,
-            ) -> Property:
+            ) -> Listing:
         """Create listing"""
         listing = Listing(
-            name=schema.name,
+            name=schema.residentialComplex,
+            category=schema.category,
             description=schema.description,
-            # district=schema.district,
-            # address=schema.address,
+            longitude=schema.longitude,
+            latitude=schema.latitude,
+            address=schema.address,
+            building_area=schema.buildingArea,
+            living_area=schema.livingArea,
+            objects=schema.objects,
+            year=schema.year,
+            building_floors=schema.buildingFloors,
+            elevators=schema.elevator,
+            parking=schema.parkingSlot,
+            installment=schema.installment,
+            swimming_pool=schema.swimmingPool,
             agent_id=agent_id
         )
 
@@ -537,43 +564,67 @@ class PropertyRepository(BaseRepository[Property]):
         for property in listing.properties:
             property.deactivate()
 
+    async def get_listing_by(
+            self,
+            **kwargs,
+            ) -> Listing:
+        """Get listing by any field"""
+        result = await self.session.execute(
+            select(Listing)
+            .options(
+                joinedload(Listing.agent),
+                joinedload(Listing.properties)
+            )
+            .filter_by(**kwargs))
+        return result.scalars().first()
+
     async def create_property(
             self,
             schema: CreatePropertySchema,
             images: list[UploadFile],
             agent_id: int,
+            listing_id: int = None,
             ) -> Property:
         """Create property"""
+        currencies_to_dollar = {
+            "€": 1.03,
+            "£": 1.22,
+            "$": 1,
+            "₺": 0.028,
+        }
         property_obj = Property(
-            name=schema.name,
+            listing_id=listing_id,
             description=schema.description,
-            price=schema.price,
+            price=schema.price * currencies_to_dollar[schema.currency],
+            currency=schema.currency,
+            original_price=schema.price,
             location=PropertyLocation(
                 latitude=schema.latitude,
-                longitude=schema.longitude
+                longitude=schema.longitude,
+                address=schema.address
                 ),
             info=PropertyInfo(
                 category=schema.category,
-                total_area=schema.total_area,
-                living_area=schema.living_area,
-                apartment_area=schema.apartment_area,
-                kitchen_area=schema.kitchen_area,
-                rooms=schema.rooms,
-                bathrooms=schema.bathrooms,
-                living_rooms=schema.living_rooms,
+
+                total_area=schema.totalArea,
+                living_area=schema.livingArea,
+
+                bedrooms=schema.bedroom,
+                bathrooms=schema.bathroom,
+                living_rooms=schema.livingRoom,
+
                 floor=schema.floor,
-                floors=schema.floors,
-                district=schema.district,
-                address=schema.address,
+                floors=schema.buildingFloors,
                 balcony=schema.balcony,
-                view=schema.view
+                condition=schema.condition,
+                apartment_stories=schema.apartmentStories
             ),
             building=PropertyBuilding(
-                year_built=schema.year_built,
-                building_type=schema.building_type,
-                elevators=schema.elevators,
-                parking=schema.parking,
-                flooring_type=schema.flooring_type
+                year_built=schema.year,
+                elevators=schema.elevator,
+                parking=schema.parkingSlot,
+                installment=schema.installment,
+                swimming_pool=schema.swimmingPool
             ),
             owner_id=agent_id)
 
@@ -588,7 +639,7 @@ class PropertyRepository(BaseRepository[Property]):
             self,
             property: Property,
             images: list[UploadFile]
-            ) -> Property:
+            ) -> None:
         """Add image to property"""
         await self._add_images_to_property(property, images)
         await self.commit()
@@ -652,6 +703,8 @@ class PropertyRepository(BaseRepository[Property]):
         property = await self.get_or_404(property_id)
 
         property.is_sold = is_sold
+        if not is_sold:
+            await self.delete(property)
         await self.commit()
 
         queue_delete_property.delay(property_id)
@@ -679,10 +732,10 @@ class PropertyRepository(BaseRepository[Property]):
         await self.commit()
 
     async def unlike_property(
-        self,
-        property_id: int,
-        user_id: int,
-        ) -> None:
+            self,
+            property_id: int,
+            user_id: int,
+    ) -> None:
         """Unlike property"""
         await self.session.execute(
             select(PropertyLike)
@@ -692,6 +745,14 @@ class PropertyRepository(BaseRepository[Property]):
                     PropertyLike.user_id == user_id
                 )
             )
-            .delete()
+        )
+        await self.session.execute(
+            delete(PropertyLike)
+            .where(
+                and_(
+                    PropertyLike.property_id == property_id,
+                    PropertyLike.user_id == user_id
+                )
+            )
         )
         await self.commit()
