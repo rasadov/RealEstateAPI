@@ -32,21 +32,37 @@ class AdminService:
             raise exceptions.Unauthorized
 
         filters = {}
-        if lvl is not None:
-            if (lvl > level or (lvl == level and level != 4)):
-                raise exceptions.Unauthorized
-            filters["level"] = lvl
-        else:
-            if level == 4:
-                filters["level"] = 4
-            else:
-                filters["level"] = level - 1
+        # if lvl is not None:
+        #     if lvl > level or (lvl == level and level != 4):
+        #         raise exceptions.Unauthorized
+        #     filters["level"] = lvl
+        # else:
+        #     if level == 4:
+        #         filters["level"] = 4
+        #     else:
+        #         filters["level"] = level - 1
 
         if role is not None:
             filters["role"] = role
 
         return await self.user_repository.get_users_page_by(
             elements, (page - 1) * elements, **filters)
+
+    async def get_agent_page(
+            self,
+            token: TokenData,
+            page: int,
+            elements: int,
+            ) -> Sequence[User]:
+        """Get users."""
+        user_obj = await self.user_repository.get_or_401(token.user_id)
+        level = user_obj.level
+
+        if  level < 1:
+            raise exceptions.Unauthorized
+
+        return await self.user_repository.get_agents_page(
+            page, elements)
 
     async def delete_property(
             self,
@@ -80,7 +96,7 @@ class AdminService:
             raise exceptions.Unauthorized
 
         return await self.property_repository.get_properties_page_by(
-            elements, (page - 1) * elements, is_approved=False)
+            elements, (page - 1) * elements, approved=False)
 
     async def get_approvals(
             self,
@@ -97,6 +113,24 @@ class AdminService:
 
         return await self.property_repository.get_approvals_page(
             elements, (page - 1) * elements)
+
+    async def delete_user(
+            self,
+            token: TokenData,
+            user_id: int,
+            ) -> Dict[str, str]:
+        """Delete user."""
+        user_obj = await self.user_repository.get_or_401(token.user_id)
+        level = user_obj.level
+
+        if level < 1:
+            raise exceptions.Unauthorized
+
+        user = await self.user_repository.get_or_404(user_id)
+        await self.user_repository.delete_user(user.id)
+        return {
+            "detail": "User deleted",
+        }
 
     async def get_sold_properties(
             self,
@@ -151,3 +185,19 @@ class AdminService:
         return {
             "detail": "Property deactivated",
         }
+
+    async def get_properties(
+            self,
+            token: TokenData,
+            page: int,
+            elements: int,
+            ) -> Sequence[Property]:
+        """Get properties."""
+        user_obj = await self.user_repository.get_or_401(token.user_id)
+        level = user_obj.level
+
+        if level < 1:
+            raise exceptions.Unauthorized
+
+        return await self.property_repository.get_properties_page(
+            elements, (page - 1) * elements)

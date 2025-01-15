@@ -119,14 +119,35 @@ class UserRepository(BaseRepository[User]):
             **kwargs,
             ) -> Sequence[User]:
         """Get users page"""
+        print(kwargs)
         result = await self.session.execute(
             select(User).filter_by(
                 **kwargs
-                ).
-                limit(limit).
-                offset(offset)
+                )
+            .limit(limit)
+            .offset(offset)
             )
         return result.scalars().all()
+
+    async def get_agents_page(
+            self,
+            page: int,
+            elements: int,
+            ) -> Sequence[User]:
+        """Get agents page"""
+        result = await self.session.execute(
+            select(User).options(
+                joinedload(User.agent)
+                .joinedload(Agent.reviews),
+                joinedload(User.image),
+                ).filter(
+                User.role == "agent"
+                )
+            .limit(elements)
+            .offset((page-1)*elements)
+            )
+
+        return result.scalars().unique().all()
 
     async def get_users_count(
             self,
@@ -154,4 +175,13 @@ class UserRepository(BaseRepository[User]):
                 rating=rating,
                 comment=comment,
                 ))
+        await self.session.commit()
+
+    async def delete_user(
+            self,
+            user_id: int,
+            ) -> None:
+        """Delete user"""
+        user = await self.get_or_404(user_id)
+        await self.session.delete(user)
         await self.session.commit()

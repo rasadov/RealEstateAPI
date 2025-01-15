@@ -269,7 +269,8 @@ class PropertyRepository(BaseRepository[Property]):
         result = await self.session.execute(
             select(Property).
             options(
-            joinedload(Property.owner),
+            joinedload(Property.owner)
+                .joinedload(Agent.user),
             joinedload(Property.images),
             joinedload(Property.location),
             joinedload(Property.info)

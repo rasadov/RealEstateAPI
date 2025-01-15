@@ -26,7 +26,15 @@ async def get_agents(
     admin_service: AdminService = Depends(get_admin_service),
     current_user: TokenData = Depends(get_current_user)
     ):
-    return await admin_service.get_users_page(current_user, page, elements, role="agent")
+    return await admin_service.get_agent_page(current_user, page, elements)
+
+@router.delete("/user")
+async def delete_user(
+    user_id: int,
+    admin_service: AdminService = Depends(get_admin_service),
+    current_user: TokenData = Depends(get_current_user)
+    ):
+    return await admin_service.delete_user(current_user, user_id)
 
 @router.get("/properties/unapproved")
 async def get_unapproved_properties(
