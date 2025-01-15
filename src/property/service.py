@@ -134,6 +134,10 @@ class PropertyService:
             "results": count,
         }
 
+    async def viewed_property(self, property_id: int) -> None:
+        """Viewed property"""
+        return await self.property_repository.viewed_property(property_id)
+
     async def create_property(
             self,
             schema: CreatePropertySchema,

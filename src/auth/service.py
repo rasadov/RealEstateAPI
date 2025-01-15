@@ -84,7 +84,8 @@ class AuthService:
         new_user = User(
             name=payload.get("name"),
             email=payload.get("email"),
-            password_hash=hash_password(payload.get("password"))
+            password_hash=hash_password(payload.get("password")),
+            phone=payload.get("phone"),
         )
         self.user_service.user_repository.add(new_user)
         await self.user_service.user_repository.commit()

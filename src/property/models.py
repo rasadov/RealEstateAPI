@@ -53,6 +53,9 @@ class Property(CreateTimestampMixin):
     def deactivate(self) -> None:
         self.is_active = False
 
+    def viewed(self) -> None:
+        self.views += 1
+
 
 class PropertyImage(ImageMixin):
     """Property image model."""

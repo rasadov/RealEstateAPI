@@ -89,6 +89,14 @@ async def like_property(
     return await property_service.like_property(
         property_id, user.user_id)
 
+@router.post("/view/{property_id}")
+async def view_property(
+    property_id: int,
+    property_service: PropertyService = Depends(get_property_service)
+    ):
+    return await property_service.viewed_property(
+        property_id)
+
 @router.put("update/{id}")
 async def update_property(
     id: int,

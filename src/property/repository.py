@@ -380,7 +380,8 @@ class PropertyRepository(BaseRepository[Property]):
             select(Property)
             .options(
                 joinedload(Property.owner).
-                joinedload(Agent.user),
+                joinedload(Agent.user).
+                joinedload(User.image),
                 joinedload(Property.location),
                 joinedload(Property.images),
                 joinedload(Property.info)
@@ -465,6 +466,15 @@ class PropertyRepository(BaseRepository[Property]):
             .offset(offset)
         )
         return result.scalars().unique().all()
+
+    async def viewed_property(
+            self,
+            property_id: int,
+            ) -> None:
+        """Viewed property"""
+        property_obj = await self.get_or_404(property_id)
+        property_obj.viewed()
+        await self.commit()
     
     async def create_listing(
             self,
