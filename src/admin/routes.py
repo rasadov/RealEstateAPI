@@ -36,6 +36,15 @@ async def delete_user(
     ):
     return await admin_service.delete_user(current_user, user_id)
 
+@router.get("/properties")
+async def get_properties(
+        page: int,
+        elements: int,
+        current_user: TokenData = Depends(get_current_user),
+        admin_service: AdminService = Depends(get_admin_service),
+):
+    return await admin_service.get_admin_properties_page(current_user, page, elements)
+
 @router.get("/properties/unapproved")
 async def get_unapproved_properties(
     page: int,

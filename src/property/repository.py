@@ -271,6 +271,7 @@ class PropertyRepository(BaseRepository[Property]):
             options(
             joinedload(Property.owner)
                 .joinedload(Agent.user),
+            joinedload(Property.listing),
             joinedload(Property.images),
             joinedload(Property.location),
             joinedload(Property.info)
@@ -283,6 +284,28 @@ class PropertyRepository(BaseRepository[Property]):
                 ).limit(limit).offset(offset)
         )
         return result.scalars().unique().all()
+
+    async def get_properties_page_admin(
+            self,
+            limit: int,
+            offset: int,
+            ) -> Sequence[Property]:
+        """Get properties page"""
+        print("admin")
+        result = await self.session.execute(
+            select(Property).
+            options(
+            joinedload(Property.owner)
+                .joinedload(Agent.user),
+            joinedload(Property.listing),
+            joinedload(Property.images),
+            joinedload(Property.location),
+            joinedload(Property.info)
+            ).order_by(
+                Property.created_at.desc()
+            ).limit(limit).offset(offset)
+        )
+        return result.scalars().all()
 
     async def get_properties_count_filtered(self, filters: list[tuple]) -> int:
         """Get the number of properties matching the given filters."""

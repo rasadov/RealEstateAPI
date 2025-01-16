@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, Sequence
 
 from src.user.repository import UserRepository
-from src.user.models import User
+from src.user.models import User, Approval
 from src.auth import exceptions
 from src.auth.schemas import TokenData 
 from src.property.repository import PropertyRepository
@@ -82,6 +82,22 @@ class AdminService:
             "detail": "Property deleted",
         }
 
+    async def get_admin_properties_page(
+            self,
+            token: TokenData,
+            page: int,
+            elements: int,
+            ) -> Sequence[Property]:
+        """Get properties."""
+        user_obj = await self.user_repository.get_or_401(token.user_id)
+        level = user_obj.level
+
+        if level < 1:
+            raise exceptions.Unauthorized
+
+        return await self.property_repository.get_properties_page_admin(
+            elements, (page - 1) * elements)
+
     async def get_unapproved_properties_page(
             self,
             token: TokenData,
@@ -103,7 +119,7 @@ class AdminService:
             token: TokenData,
             page: int,
             elements: int,
-            ) -> Sequence[Property]:
+            ) -> Sequence[Approval]:
         """Get approvals."""
         user_obj = await self.user_repository.get_or_401(token.user_id)
         level = user_obj.level

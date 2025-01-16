@@ -45,6 +45,8 @@ class PropertyService:
         offset = (schema.page - 1) * schema.elements
         filters = schema.get_filters()
 
+        print(filters)
+
         properties = await self.property_repository.get_properties_page(
             schema.elements, offset, filters)
         count = await self.property_repository.get_properties_count_filtered(

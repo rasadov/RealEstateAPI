@@ -138,7 +138,10 @@ class UserRepository(BaseRepository[User]):
         result = await self.session.execute(
             select(User).options(
                 joinedload(User.agent)
-                .joinedload(Agent.reviews),
+                .options(
+                    joinedload(Agent.reviews),
+                    joinedload(Agent.properties),
+                ),
                 joinedload(User.image),
                 ).filter(
                 User.role == "agent"
