@@ -11,6 +11,7 @@ class Settings:
     FRONTEND_URL = os.getenv("FRONTEND_URL")
     BACKEND_URL = os.getenv("BACKEND_URL")
     DEBUG = os.getenv("DEBUG", "false") == "true"
+    MAX_IMAGES_PER_PROPERTY = 50
 
     # Auth
     SECRET_KEY = os.getenv("SECRET_KEY")

@@ -3,6 +3,7 @@ from typing import Sequence
 
 from fastapi import UploadFile
 
+from src.config import Settings
 from src.property.repository import PropertyRepository
 from src.property import exceptions
 from src.property.models import Property, PropertyLocation
@@ -181,19 +182,19 @@ class PropertyService:
             ) -> Property:
         """Add image to property"""
         agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
-        property = await self.property_repository.get_or_404(property_id)
+        property_obj = await self.property_repository.get_or_404(property_id)
 
-        if property.owner_id != agent.id:
+        if property_obj.owner_id != agent.id:
             raise auth_exceptions.Unauthorized
 
         current_images = await self.property_repository.count_property_images(property_id)
-        if current_images + len(images) > 15:
+        if current_images + len(images) > Settings.MAX_IMAGES_PER_PROPERTY:
             raise exceptions.PropertyImagesLimitExceeded
 
         await self.property_repository.add_images_to_property(
-            property, images, user_id)
+            property_obj, images, user_id)
 
-        return property
+        return property_obj
 
     async def add_images_to_listing(
             self,
