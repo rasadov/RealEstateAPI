@@ -16,7 +16,7 @@ async def initialize_database():
     global engine, AsyncSessionLocal
     engine = create_async_engine(
         Settings.DATABASE_URL,
-        echo=True
+        echo=Settings.DEBUG
         )
 
     AsyncSessionLocal = sessionmaker(

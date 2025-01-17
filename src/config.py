@@ -10,6 +10,7 @@ class Settings:
     # App
     FRONTEND_URL = os.getenv("FRONTEND_URL")
     BACKEND_URL = os.getenv("BACKEND_URL")
+    DEBUG = os.getenv("DEBUG", "false") == "true"
 
     # Auth
     SECRET_KEY = os.getenv("SECRET_KEY")

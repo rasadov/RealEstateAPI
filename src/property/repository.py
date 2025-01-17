@@ -505,6 +505,7 @@ class PropertyRepository(BaseRepository[Property]):
             schema: CreateListingSchema,
             images: list[UploadFile],
             agent_id: int,
+            user_id: int
             ) -> Listing:
         """Create listing"""
         listing = Listing(
@@ -529,31 +530,34 @@ class PropertyRepository(BaseRepository[Property]):
         self.add(listing)
         await self.commit()
         await self.refresh(listing)
-        await self._add_images_to_listing(listing, images)
+        await self._add_images_to_listing(listing, images, user_id)
         await self.commit()
         return listing
     
     async def add_images_to_listing(
             self,
             listing: Listing,
-            images: list[UploadFile]
+            images: list[UploadFile],
+            user_id: int
             ) -> Listing:
         """Add images to listing"""
-        await self._add_images_to_listing(listing, images)
+        await self._add_images_to_listing(listing, images, user_id)
         await self.commit()
         return listing
     
     async def _add_images_to_listing(
             self,
             listing: Listing,
-            images: list[UploadFile]
+            images: list[UploadFile],
+            user_id: int
             ) -> None:
         """Add images to listing"""
         for image in images:
-            path = await self.staticFilesManager.upload(image)
+            path = f"listing/images/{user_id}"
+            url = await self.staticFilesManager.upload(image, path)
             listing_image = ListingImage(
                 listing_id=listing.id,
-                image_url=path
+                image_url=url
             )
             self.add(listing_image)
 
@@ -617,6 +621,7 @@ class PropertyRepository(BaseRepository[Property]):
             schema: CreatePropertySchema,
             images: list[UploadFile],
             agent_id: int,
+            user_id: int,
             listing_id: int = None,
             ) -> Property:
         """Create property"""
@@ -665,30 +670,34 @@ class PropertyRepository(BaseRepository[Property]):
         self.add(property_obj)
         await self.commit()
         await self.refresh(property_obj)
-        await self._add_images_to_property(property_obj, images)
+        await self._add_images_to_property(property_obj, images, user_id)
         await self.commit()
         return property_obj
 
     async def add_images_to_property(
             self,
-            property: Property,
-            images: list[UploadFile]
+            property_obj: Property,
+            images: list[UploadFile],
+            user_id: int
             ) -> None:
         """Add image to property"""
-        await self._add_images_to_property(property, images)
+        await self._add_images_to_property(property_obj, images, user_id)
         await self.commit()
     
     async def _add_images_to_property(
             self,
-            property: Property,
-            images: list[UploadFile]
+            property_obj: Property,
+            images: list[UploadFile],
+            user_id: int
             ) -> None:
         """Add image to property"""
         for image in images:
-            path = await self.staticFilesManager.upload(image)
+            path = f"property/images/{user_id}"
+            url = await self.staticFilesManager.upload(image, path)
+            print(f"WE ARE ADDING {url} to {property_obj.id}")
             property_image = PropertyImage(
-                property_id=property.id,
-                image_url=path
+                property_id=property_obj.id,
+                image_url=url
                 )
             self.add(property_image)
 

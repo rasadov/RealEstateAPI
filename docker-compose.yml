@@ -10,6 +10,11 @@ services:
     depends_on:
       - redis
       - postgres
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   celery:
     build: .

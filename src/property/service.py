@@ -157,9 +157,9 @@ class PropertyService:
 
             if listing:
                 return await self.property_repository.create_property(
-                    schema, images, agent.id, listing.id)
+                    schema, images, agent.id, user_id, listing.id)
         return await self.property_repository.create_property(
-            schema, images, agent.id)
+            schema, images, agent.id, user_id)
     
     async def create_listing(
             self,
@@ -171,7 +171,7 @@ class PropertyService:
         agent = await self.user_repository.get_agent_by_or_401(user_id=user_id)
 
         return await self.property_repository.create_listing(
-            schema, images, agent.id)
+            schema, images, agent.id, user_id)
 
     async def add_images_to_property(
             self,
@@ -191,7 +191,7 @@ class PropertyService:
             raise exceptions.PropertyImagesLimitExceeded
 
         await self.property_repository.add_images_to_property(
-            property, images)
+            property, images, user_id)
 
         return property
 

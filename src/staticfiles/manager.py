@@ -20,12 +20,12 @@ class BaseStaticFilesManager(ABC):
         ...
 
     @abstractmethod
-    def upload(self, file: UploadFile) -> str:
+    async def upload(self, file: UploadFile, path: str) -> str:
         """Upload file"""
         ...
 
     @abstractmethod
-    def delete(self, file_path: str) -> None:
+    async def delete(self, file_path: str) -> None:
         """Delete file"""
         ...
 
@@ -145,7 +145,7 @@ class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
         except Exception as e:
             raise exceptions.FileUploadError(f"Error getting file from S3: {e}")
 
-    async def upload(self, file: UploadFile) -> str:
+    async def upload(self, file: UploadFile, path: str) -> str:
         """Upload file to S3, ensuring unique filenames and applying validation/processing
         
         returns: S3 URL of the uploaded file
@@ -154,7 +154,7 @@ class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
         file = await self._process_image(file)
 
         unique_filename = self._generate_unique_filename(file.filename)
-        file_path = f"uploads/{unique_filename}"
+        file_path = f"uploads/{path}/{unique_filename}"
         try:
             self.s3_client.upload_fileobj(
                 file.file,
