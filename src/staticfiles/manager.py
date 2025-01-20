@@ -78,7 +78,7 @@ class LocalStaticFilesManager(BaseStaticFilesManager):
 class S3StaticFilesManager(S3Settings, BaseStaticFilesManager):
     """S3 static files service with file size, type limitations, and image processing"""
     MAX_FILE_SIZE_MB: int = 100
-    MAX_IMAGE_SIZE_PX: tuple[int, int] = (1000, 1000)
+    MAX_IMAGE_SIZE_PX: tuple[int, int] = (4000, 4000)
     ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"}
 
     def __init__(self):
