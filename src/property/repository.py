@@ -553,7 +553,7 @@ class PropertyRepository(BaseRepository[Property]):
             ) -> None:
         """Add images to listing"""
         for image in images:
-            path = f"listing/images/{user_id}"
+            path = f"listing/images/{user_id}/{listing.id}"
             url = await self.staticFilesManager.upload(image, path)
             listing_image = ListingImage(
                 listing_id=listing.id,
@@ -692,7 +692,7 @@ class PropertyRepository(BaseRepository[Property]):
             ) -> None:
         """Add image to property"""
         for image in images:
-            path = f"property/images/{user_id}"
+            path = f"property/images/{user_id}/{property_obj.id}"
             url = await self.staticFilesManager.upload(image, path)
             print(f"WE ARE ADDING {url} to {property_obj.id}")
             property_image = PropertyImage(
