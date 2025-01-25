@@ -58,16 +58,57 @@ async def get_properties_by_agent_page(
     return await property_service.get_properties_by_agent_page(
         agent_id, page, elements)
 
+@router.get("/me/liked")
+async def get_user_liked_properties(
+    user: TokenData = Depends(get_current_user),
+    property_service: PropertyService = Depends(get_property_service)
+    ):
+    return await property_service.get_favorites_ids(user.user_id)
+
+@router.get("/areas")
+async def get_areas():
+    return {
+        "cities": [
+        "Lefkoşa",
+        "Girne",
+        "Gazimağusa",
+        "Güzelyurt",
+        "İskele",
+        "Lefke",
+        "Lapta",
+        "Koruçam",
+        "Alsancak",
+        "Değirmenlik",
+        "Esentepe",
+        "Dikmen",
+        "Mehmetçik",
+        "Karpaz",
+        "Dipkarpaz",
+        "Yeni Erenköy",
+        "Geçitkale",
+        "Beşparmak"
+        ],
+        "areas": [
+            "Lefkoşa",
+            "Girne",
+            "Gazimağusa",
+            "Güzelyurt",
+            "İskele",
+            "Lefke"
+        ]
+    }
+
 @router.post("/create")
 async def create_property(
     payload: CreatePropertySchema = Depends(CreatePropertySchema.as_form),
     files: list[UploadFile] = File(...),
+    documents: list[UploadFile] = File(...),
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
     ):
     print("USER DATA ", user)
     return await property_service.create_property(
-        payload, files, user.user_id
+        payload, files, documents, user.user_id
     )
 
 @router.post("/image/{property_id}")

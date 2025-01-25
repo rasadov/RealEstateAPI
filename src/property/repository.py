@@ -11,7 +11,8 @@ from src.base.repository import BaseRepository
 from src.staticfiles.manager import BaseStaticFilesManager
 from src.property.models import (Property, PropertyImage,
                                  PropertyInfo, PropertyLocation,
-                                 PropertyBuilding, PropertyLike)
+                                 PropertyBuilding, PropertyLike,
+                                 PropertyDocument)
 from src.user.models import Approval, User, Agent
 from src.property import exceptions
 from src.listing import exceptions as listing_exceptions
@@ -38,14 +39,22 @@ class PropertyRepository(BaseRepository[Property]):
             ">=": "__ge__",
             "<=": "__le__",
             "==": "__eq__",
+            "in": "in_",
         }
 
         for value, attr_path, op in filters:
-            if "." in attr_path:
+            if value in ("LastFloor", "NotLastFloor"):
+                if value == "LastFloor":
+                    filter_conditions.append(
+                        getattr(Property.info, attr_path) < Property.info.floors
+                    )
+                else:
+                    filter_conditions.append(
+                        getattr(Property.info, attr_path) < Property.info.floors
+                    )
+                continue
+            elif "." in attr_path:
                 base_attr, related_attr = attr_path.split(".")
-                # e.g. attr_path = "info.total_area"
-                # base_attr = "info", related_attr = "total_area"
-                # get Property.info.mapper.class_ => Info model, then get .total_area
                 attr = getattr(
                     getattr(Property, base_attr).property.mapper.class_,
                     related_attr
@@ -53,7 +62,6 @@ class PropertyRepository(BaseRepository[Property]):
             else:
                 attr = getattr(Property, attr_path)
 
-            # Build e.g. attr.__ge__(value), attr.__le__(value), or attr.__eq__(value)
             filter_conditions.append(
                 getattr(attr, operator_mapping[op])(value)
             )
@@ -491,6 +499,18 @@ class PropertyRepository(BaseRepository[Property]):
         )
         return result.scalars().unique().all()
 
+    async def get_favorites_ids(
+            self,
+            user_id: int
+    ) -> Sequence[int]:
+        """Get favorites ids"""
+        result = await self.session.execute(
+            select(PropertyLike.property_id)
+            .filter(PropertyLike.user_id == user_id)
+        )
+
+        return result.scalars().all()
+
     async def viewed_property(
             self,
             property_id: int,
@@ -553,7 +573,7 @@ class PropertyRepository(BaseRepository[Property]):
             ) -> None:
         """Add images to listing"""
         for image in images:
-            path = f"listing/images/{user_id}/{listing.id}"
+            path = f"listing/{user_id}/{listing.id}/images"
             url = await self.staticFilesManager.upload(image, path)
             listing_image = ListingImage(
                 listing_id=listing.id,
@@ -593,7 +613,7 @@ class PropertyRepository(BaseRepository[Property]):
         await self.commit()
         queue_delete_property.delay(listing_id)
 
-    async def _deactivate_listing(
+    def _deactivate_listing(
             self,
             listing: Listing,
             ) -> None:
@@ -620,6 +640,7 @@ class PropertyRepository(BaseRepository[Property]):
             self,
             schema: CreatePropertySchema,
             images: list[UploadFile],
+            documents: list[UploadFile],
             agent_id: int,
             user_id: int,
             listing_id: int = None,
@@ -648,6 +669,7 @@ class PropertyRepository(BaseRepository[Property]):
                 total_area=schema.totalArea,
                 living_area=schema.livingArea,
 
+                rooms=schema.rooms,
                 bedrooms=schema.bedroom,
                 bathrooms=schema.bathroom,
                 living_rooms=schema.livingRoom,
@@ -655,7 +677,7 @@ class PropertyRepository(BaseRepository[Property]):
                 floor=schema.floor,
                 floors=schema.buildingFloors,
                 balcony=schema.balcony,
-                condition=schema.condition,
+                renovation=schema.renovation,
                 apartment_stories=schema.apartmentStories
             ),
             building=PropertyBuilding(
@@ -663,7 +685,8 @@ class PropertyRepository(BaseRepository[Property]):
                 elevators=schema.elevator,
                 parking=schema.parkingSlot,
                 installment=schema.installment,
-                swimming_pool=schema.swimmingPool
+                swimming_pool=schema.swimmingPool,
+                gym=schema.gym
             ),
             owner_id=agent_id)
 
@@ -671,6 +694,7 @@ class PropertyRepository(BaseRepository[Property]):
         await self.commit()
         await self.refresh(property_obj)
         await self._add_images_to_property(property_obj, images, user_id)
+        await self._add_documents_to_property(property_obj, documents, user_id)
         await self.commit()
         return property_obj
 
@@ -683,6 +707,22 @@ class PropertyRepository(BaseRepository[Property]):
         """Add image to property"""
         await self._add_images_to_property(property_obj, images, user_id)
         await self.commit()
+
+    async def _add_documents_to_property(
+            self,
+            property_obj: Property,
+            documents: list[UploadFile],
+            user_id: int
+            ) -> None:
+        """Add documents to property"""
+        for document in documents:
+            path = f"property/{user_id}/{property_obj.id}/documents"
+            url = await self.staticFilesManager.upload(document, path)
+            property_document = PropertyDocument(
+                property_id=property_obj.id,
+                document_url=url
+                )
+            self.add(property_document)
     
     async def _add_images_to_property(
             self,
@@ -692,7 +732,7 @@ class PropertyRepository(BaseRepository[Property]):
             ) -> None:
         """Add image to property"""
         for image in images:
-            path = f"property/images/{user_id}/{property_obj.id}"
+            path = f"property/{user_id}/{property_obj.id}/images"
             url = await self.staticFilesManager.upload(image, path)
             print(f"WE ARE ADDING {url} to {property_obj.id}")
             property_image = PropertyImage(

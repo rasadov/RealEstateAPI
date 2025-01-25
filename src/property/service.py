@@ -141,10 +141,18 @@ class PropertyService:
         """Viewed property"""
         return await self.property_repository.viewed_property(property_id)
 
+    async def get_favorites_ids(
+            self,
+            user_id: int,
+            ) -> Sequence[Property]:
+        """Get favorite properties"""
+        return await self.property_repository.get_favorites_ids(user_id)
+
     async def create_property(
             self,
             schema: CreatePropertySchema,
             images: list[UploadFile],
+            documents: list[UploadFile],
             user_id: int,
             ) -> Property:
         """Create property"""
@@ -160,7 +168,7 @@ class PropertyService:
                 return await self.property_repository.create_property(
                     schema, images, agent.id, user_id, listing.id)
         return await self.property_repository.create_property(
-            schema, images, agent.id, user_id)
+            schema, images, documents, agent.id, user_id)
     
     async def create_listing(
             self,

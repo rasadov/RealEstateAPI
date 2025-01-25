@@ -15,6 +15,7 @@ class Property(CreateTimestampMixin):
 
     __tablename__ = "PropertyModel"
 
+    title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
     views: Mapped[int] = mapped_column(Integer, default=0)
     price: Mapped[float] = mapped_column(Float, nullable=False)
@@ -45,6 +46,9 @@ class Property(CreateTimestampMixin):
     )
     listing: Mapped["Listing"] = relationship("Listing", back_populates="properties")
     likes: Mapped[list["PropertyLike"]] = relationship("PropertyLike", back_populates="property")
+    documents: Mapped[list["PropertyDocument"]] = relationship(
+        "PropertyDocument", back_populates="property", cascade="all, delete-orphan"
+    )
 
     def approve(self) -> None:
         self.approved = True
@@ -91,19 +95,19 @@ class PropertyInfo(CustomBase):
         Integer, ForeignKey("PropertyModel.id"), nullable=False
     )
     category: Mapped[str] = mapped_column(String, nullable=True)
+    renovation: Mapped[str] = mapped_column(String, nullable=True)
     total_area: Mapped[float] = mapped_column(Float, nullable=True)
     living_area: Mapped[float] = mapped_column(Float, nullable=True)
+    rooms: Mapped[int] = mapped_column(Integer, nullable=True)
     bathrooms: Mapped[int] = mapped_column(Integer, nullable=True)
     bedrooms: Mapped[int] = mapped_column(Integer, nullable=True)
     living_rooms: Mapped[int] = mapped_column(Integer, nullable=True)
     floor: Mapped[int] = mapped_column(Integer, nullable=True)
     floors: Mapped[int] = mapped_column(Integer, nullable=True)
     balcony: Mapped[int] = mapped_column(Integer, nullable=True)
-    condition: Mapped[str] = mapped_column(String, nullable=True)
     apartment_stories: Mapped[int] = mapped_column(Integer, nullable=True)
 
     property: Mapped["Property"] = relationship("Property", back_populates="info")
-
 
 class PropertyBuilding(CustomBase):
     """Information on property building"""
@@ -117,6 +121,7 @@ class PropertyBuilding(CustomBase):
     year_built: Mapped[int] = mapped_column(Integer, nullable=True)
     elevators: Mapped[bool] = mapped_column(Boolean, nullable=True)
     parking: Mapped[bool] = mapped_column(Boolean, nullable=True)
+    gym: Mapped[bool] = mapped_column(Boolean, nullable=True)
     installment: Mapped[bool] = mapped_column(Boolean, nullable=True)
     swimming_pool: Mapped[bool] = mapped_column(Boolean, nullable=True)
 
@@ -139,6 +144,19 @@ class PropertyReport(CreateTimestampMixin):
 
     property: Mapped["Property"] = relationship("Property")
     user: Mapped["User"] = relationship("User")
+
+
+class PropertyDocument(CustomBase):
+    """Property document model."""
+
+    __tablename__ = "PropertyDocumentModel"
+
+    property_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("PropertyModel.id"), nullable=False
+    )
+    document_url: Mapped[str] = mapped_column(String, nullable=False)
+
+    property: Mapped["Property"] = relationship("Property", back_populates="documents")
 
 
 class PropertyLike(CreateTimestampMixin):
