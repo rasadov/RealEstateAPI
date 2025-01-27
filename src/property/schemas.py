@@ -103,7 +103,7 @@ class MapSearchSchema(BaseModel):
 
         # If city is set (string)
         if self.city:
-            filters.append((self.city, "location.city", "in"))
+            filters.append((self.city, "location.address", "in"))
 
         if self.livingAreaFrom is not None and self.livingAreaFrom > 0:
             filters.append((self.livingAreaFrom, "info.living_area", ">="))
