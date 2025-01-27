@@ -77,12 +77,12 @@ class MapSearchSchema(BaseModel):
         filters = []
 
         # If min_area is set and not 0
-        if self.areafrom is not None and self.areafrom > 0:
-            filters.append((self.areafrom, "info.total_area", ">="))
+        if self.areaFrom is not None and self.areaFrom > 0:
+            filters.append((self.areaFrom, "info.total_area", ">="))
 
         # If max_area is set and not 0
-        if self.areato is not None and self.areato > 0:
-            filters.append((self.areato, "info.total_area", "<="))
+        if self.areaTo is not None and self.areaTo > 0:
+            filters.append((self.areaTo, "info.total_area", "<="))
 
         # If min_price is set and not 0
         if self.priceRangemin is not None and self.priceRangemin > 0:

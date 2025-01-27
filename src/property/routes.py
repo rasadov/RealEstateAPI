@@ -102,7 +102,7 @@ async def get_areas():
 async def create_property(
     payload: CreatePropertySchema = Depends(CreatePropertySchema.as_form),
     files: list[UploadFile] = File(...),
-    documents: list[UploadFile] = File(...),
+    documents: Optional[list[UploadFile]] = File(...),
     user: TokenData = Depends(get_current_user),
     property_service: PropertyService = Depends(get_property_service)
     ):

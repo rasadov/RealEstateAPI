@@ -28,19 +28,19 @@ def upgrade() -> None:
     )
     op.add_column(
         "PropertyModel",
-        sa.Column("title", sa.String(), nullable=False),
+        sa.Column("title", sa.String(), nullable=True),
     )
     op.add_column(
         "PropertyInfoModel",
-        sa.Column("rooms", sa.Integer(), nullable=False),
+        sa.Column("rooms", sa.Integer(), nullable=True),
     )
     op.add_column(
         "PropertyInfoModel",
-        sa.Column("renovation", sa.String(), nullable=False),
+        sa.Column("renovation", sa.String(), nullable=True),
     )
     op.add_column(
         "PropertyBuildingModel",
-        sa.Column("gym", sa.Boolean(), nullable=False),
+        sa.Column("gym", sa.Boolean(), nullable=True),
     )
     op.drop_column("PropertyInfoModel", "condition")
 
