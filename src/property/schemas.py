@@ -85,12 +85,12 @@ class MapSearchSchema(BaseModel):
             filters.append((self.areaTo, "info.total_area", "<="))
 
         # If min_price is set and not 0
-        if self.priceRangemin is not None and self.priceRangemin > 0:
-            filters.append((self.priceRangemin, "price", ">="))
+        if self.priceRangeMin is not None and self.priceRangeMin > 0:
+            filters.append((self.priceRangeMin, "price", ">="))
 
         # If max_price is set and not 0
-        if self.priceRangemax is not None and self.priceRangemax > 0:
-            filters.append((self.priceRangemax, "price", "<="))
+        if self.priceRangeMax is not None and self.priceRangeMax > 0:
+            filters.append((self.priceRangeMax, "price", "<="))
 
         # If roomNumber is set and not empty
         if self.roomNumber:
@@ -103,7 +103,7 @@ class MapSearchSchema(BaseModel):
 
         # If city is set (string)
         if self.city:
-            filters.append((self.city, "location.address", "in"))
+            filters.append((self.city, "location.address", "ilike"))
 
         if self.livingAreaFrom is not None and self.livingAreaFrom > 0:
             filters.append((self.livingAreaFrom, "info.living_area", ">="))

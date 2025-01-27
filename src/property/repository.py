@@ -43,17 +43,7 @@ class PropertyRepository(BaseRepository[Property]):
         }
 
         for value, attr_path, op in filters:
-            if value in ("LastFloor", "NotLastFloor"):
-                if value == "LastFloor":
-                    filter_conditions.append(
-                        getattr(Property.info, attr_path) < Property.info.floors
-                    )
-                else:
-                    filter_conditions.append(
-                        getattr(Property.info, attr_path) < Property.info.floors
-                    )
-                continue
-            elif "." in attr_path:
+            if "." in attr_path:
                 base_attr, related_attr = attr_path.split(".")
                 attr = getattr(
                     getattr(Property, base_attr).property.mapper.class_,
@@ -62,9 +52,16 @@ class PropertyRepository(BaseRepository[Property]):
             else:
                 attr = getattr(Property, attr_path)
 
-            filter_conditions.append(
-                getattr(attr, operator_mapping[op])(value)
-            )
+            if op == "ilike":
+                # You can decide exactly how you want your pattern:
+                #   - `f"%{value}%"` matches any substring
+                #   - `f"{value}%"` matches values *starting* with
+                #   - `f"%{value}"` matches values *ending* with
+                filter_conditions.append(attr.ilike(f"%{value}%"))
+            else:
+                filter_conditions.append(
+                    getattr(attr, operator_mapping[op])(value)
+                )
 
         return filter_conditions
 
@@ -282,7 +279,7 @@ class PropertyRepository(BaseRepository[Property]):
             joinedload(Property.listing),
             joinedload(Property.images),
             joinedload(Property.location),
-            joinedload(Property.info)
+            joinedload(Property.info),
             ).filter(
                 and_(
                     *filter_conditions
@@ -416,7 +413,8 @@ class PropertyRepository(BaseRepository[Property]):
                 joinedload(User.image),
                 joinedload(Property.location),
                 joinedload(Property.images),
-                joinedload(Property.info)
+                joinedload(Property.info),
+                joinedload(Property.building)
             )
             .filter(Property.id == property_id)
         )
