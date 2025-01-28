@@ -60,7 +60,7 @@ class PropertyRepository(BaseRepository[Property]):
                     filter_conditions.append(Property.info.has(PropertyInfo.floor == PropertyInfo.floors))
             else:
                 if "." in attr_path:
-                    print("HERE ", getattr(Property, attr_path))
+                    #print("HERE ", getattr(Property, attr_path))
                     base_attr, related_attr = attr_path.split(".")
                     print("BASE", base_attr, "RELATED", related_attr)
                     print("BASE", getattr(Property, base_attr))
@@ -91,10 +91,13 @@ class PropertyRepository(BaseRepository[Property]):
         """
         # Convert your filter list into valid SQLAlchemy conditions
         filter_conditions = PropertyRepository._get_filter_conditions(filters)
-
         stmt = (
             select(PropertyLocation)
-            .join(Property, PropertyLocation.property_id == Property.id)
+            # If you have a relationship from PropertyLocation to Property
+            .join(PropertyLocation.property)
+            # then from Property to PropertyInfo, if needed
+            .join(Property.info)
+            .join(Property.building)
             .where(and_(*filter_conditions))
             .order_by(Property.created_at.desc())
         )
@@ -282,21 +285,25 @@ class PropertyRepository(BaseRepository[Property]):
         filter_conditions = PropertyRepository._get_filter_conditions(filters)
 
         result = await self.session.execute(
-            select(Property).
-            options(
-            joinedload(Property.owner)
-                .joinedload(Agent.user),
-            joinedload(Property.listing),
-            joinedload(Property.images),
-            joinedload(Property.location),
-            joinedload(Property.info),
-            ).filter(
-                and_(
-                    *filter_conditions
-                    )
-                ).order_by(
-                    Property.created_at.desc()
-                ).limit(limit).offset(offset)
+            select(Property)
+            # Explicitly join or outerjoin the relationships you want to filter on
+            .join(Property.info, isouter=True)
+            .join(Property.location, isouter=True)
+            .join(Property.building, isouter=True)
+            # Then use joinedload to eagerly load data in one round trip
+            .options(
+                joinedload(Property.owner).joinedload(Agent.user),
+                joinedload(Property.listing),
+                joinedload(Property.images),
+                joinedload(Property.location),
+                joinedload(Property.info),
+            )
+            .filter(
+                and_(*filter_conditions)
+            )
+            .order_by(Property.created_at.desc())
+            .limit(limit)
+            .offset(offset)
         )
         return result.scalars().unique().all()
 
