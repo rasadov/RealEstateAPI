@@ -122,7 +122,7 @@ class MapSearchSchema(BaseModel):
             filters.append((self.maxFloor, "info.floor", "<="))
 
         if self.notFirstFloor:
-            filters.append((1, "info.floor", ">"))
+            filters.append(("NotFirstFloor", "info.floor", ">"))
 
         # If notLastFloor is set
         if self.notLastFloor:
