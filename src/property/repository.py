@@ -58,6 +58,12 @@ class PropertyRepository(BaseRepository[Property]):
                     filter_conditions.append(Property.info.has(PropertyInfo.floor < PropertyInfo.floors))
                 elif value == "LastFloor":
                     filter_conditions.append(Property.info.has(PropertyInfo.floor == PropertyInfo.floors))
+                elif value == "FirstFloor":
+                    filter_conditions.append(Property.info.has(PropertyInfo.floor == 1))
+                else:
+                    filter_conditions.append(
+                        getattr(attr, operator_mapping[op])(value)
+                    )
             else:
                 if "." in attr_path:
                     #print("HERE ", getattr(Property, attr_path))
@@ -144,7 +150,7 @@ class PropertyRepository(BaseRepository[Property]):
             )
             .filter_by(**kwargs))
         return result.scalars().first()
-    
+
     async def get_listings_page(
             self,
             limit: int,
@@ -283,6 +289,7 @@ class PropertyRepository(BaseRepository[Property]):
             ) -> Sequence[Property]:
         """Get properties page"""
         filter_conditions = PropertyRepository._get_filter_conditions(filters)
+        print(filter_conditions)
 
         result = await self.session.execute(
             select(Property)
@@ -292,7 +299,10 @@ class PropertyRepository(BaseRepository[Property]):
             .join(Property.building, isouter=True)
             # Then use joinedload to eagerly load data in one round trip
             .options(
-                joinedload(Property.owner).joinedload(Agent.user),
+                joinedload(Property.owner
+                           ).joinedload(Agent.user).load_only(
+                    User.name, User.id, User.phone, User.email
+                ),
                 joinedload(Property.listing),
                 joinedload(Property.images),
                 joinedload(Property.location),
