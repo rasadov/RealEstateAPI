@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Sequence
 
-from sqlalchemy import func, and_, delete
+from sqlalchemy import func, and_, delete, or_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.future import select
 from fastapi import UploadFile
@@ -44,8 +44,14 @@ class PropertyRepository(BaseRepository[Property]):
         }
 
         for value, attr_path, op in filters:
-            if attr_path == "info.bedrooms" and op == "in":
-                filter_conditions.append(Property.info.has(PropertyInfo.bedrooms.in_(value)))
+            or_conditions = []
+            for single_bedroom_count in value:
+                # info relationship => .has() on a related column
+                cond = Property.info.has(PropertyInfo.bedrooms == single_bedroom_count)
+                or_conditions.append(cond)
+
+            # Combine them with an OR
+            filter_conditions.append(or_(*or_conditions))
             if attr_path == "info.floor":
                 if value == "NotLastFloor":
                     filter_conditions.append(Property.info.has(PropertyInfo.floor < PropertyInfo.floors))
@@ -53,7 +59,11 @@ class PropertyRepository(BaseRepository[Property]):
                     filter_conditions.append(Property.info.has(PropertyInfo.floor == PropertyInfo.floors))
             else:
                 if "." in attr_path:
+                    print("HERE ", getattr(Property, attr_path))
                     base_attr, related_attr = attr_path.split(".")
+                    print("BASE", base_attr, "RELATED", related_attr)
+                    print("BASE", getattr(Property, base_attr))
+                    print("RELATED", getattr(Property, base_attr).property.mapper.class_)
                     attr = getattr(
                         getattr(Property, base_attr).property.mapper.class_,
                         related_attr
