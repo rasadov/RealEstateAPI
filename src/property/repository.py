@@ -39,6 +39,8 @@ class PropertyRepository(BaseRepository[Property]):
         operator_mapping = {
             ">=": "__ge__",
             "<=": "__le__",
+            ">": "__gt__",
+            "<": "__lt__",
             "==": "__eq__",
             "in": "in_",
         }
@@ -47,26 +49,12 @@ class PropertyRepository(BaseRepository[Property]):
             if attr_path == "room_number":
                 or_conditions = []
                 for single_bedroom_count in value:
-                    # info relationship => .has() on a related column
                     cond = Property.info.has(PropertyInfo.bedrooms == single_bedroom_count)
                     or_conditions.append(cond)
 
-                # Combine them with an OR
                 filter_conditions.append(or_(*or_conditions))
-            elif attr_path == "info.floor":
-                if value == "NotLastFloor":
-                    filter_conditions.append(Property.info.has(PropertyInfo.floor < PropertyInfo.floors))
-                elif value == "LastFloor":
-                    filter_conditions.append(Property.info.has(PropertyInfo.floor == PropertyInfo.floors))
-                elif value == "FirstFloor":
-                    filter_conditions.append(Property.info.has(PropertyInfo.floor == 1))
-                else:
-                    filter_conditions.append(
-                        getattr(attr, operator_mapping[op])(value)
-                    )
             else:
                 if "." in attr_path:
-                    #print("HERE ", getattr(Property, attr_path))
                     base_attr, related_attr = attr_path.split(".")
                     print("BASE", base_attr, "RELATED", related_attr)
                     print("BASE", getattr(Property, base_attr))
