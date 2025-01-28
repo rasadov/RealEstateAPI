@@ -94,7 +94,7 @@ class MapSearchSchema(BaseModel):
 
         # If roomNumber is set and not empty
         if self.roomNumber:
-            room_numbers = [int(num) for num in self.roomNumber.split(',')]
+            room_numbers = [int(x) for x in self.roomNumber.split(",")]
             print(room_numbers)
             filters.append((room_numbers, "info.bedrooms", "in"))
 
@@ -114,9 +114,11 @@ class MapSearchSchema(BaseModel):
             filters.append((self.livingAreaTo, "info.living_area", "<="))
 
         if self.minFloor is not None and self.minFloor > 0:
+            print(self.minFloor)
             filters.append((self.minFloor, "info.floor", ">="))
 
         if self.maxFloor is not None and self.maxFloor > 0:
+            print(self.maxFloor)
             filters.append((self.maxFloor, "info.floor", "<="))
 
         if self.notFirstFloor:
