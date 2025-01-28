@@ -29,6 +29,7 @@ class PropertyRepository(BaseRepository[Property]):
 
     @staticmethod
     def _get_filter_conditions(filters: list[tuple]) -> list:
+
         filter_conditions = [
             Property.is_active == True,
             Property.is_sold == False,
@@ -43,25 +44,29 @@ class PropertyRepository(BaseRepository[Property]):
         }
 
         for value, attr_path, op in filters:
-            if "." in attr_path:
-                base_attr, related_attr = attr_path.split(".")
-                attr = getattr(
-                    getattr(Property, base_attr).property.mapper.class_,
-                    related_attr
-                )
+            if attr_path == "info.bedrooms" and op == "in":
+                filter_conditions.append(Property.info.has(PropertyInfo.bedrooms.in_(value)))
+            if attr_path == "info.floor":
+                if value == "NotLastFloor":
+                    filter_conditions.append(Property.info.has(PropertyInfo.floor < PropertyInfo.floors))
+                elif value == "LastFloor":
+                    filter_conditions.append(Property.info.has(PropertyInfo.floor == PropertyInfo.floors))
             else:
-                attr = getattr(Property, attr_path)
+                if "." in attr_path:
+                    base_attr, related_attr = attr_path.split(".")
+                    attr = getattr(
+                        getattr(Property, base_attr).property.mapper.class_,
+                        related_attr
+                    )
+                else:
+                    attr = getattr(Property, attr_path)
 
-            if op == "ilike":
-                # You can decide exactly how you want your pattern:
-                #   - `f"%{value}%"` matches any substring
-                #   - `f"{value}%"` matches values *starting* with
-                #   - `f"%{value}"` matches values *ending* with
-                filter_conditions.append(attr.ilike(f"%{value}%"))
-            else:
-                filter_conditions.append(
-                    getattr(attr, operator_mapping[op])(value)
-                )
+                if op == "ilike":
+                    filter_conditions.append(attr.ilike(f"%{value}%"))
+                else:
+                    filter_conditions.append(
+                        getattr(attr, operator_mapping[op])(value)
+                    )
 
         return filter_conditions
 
@@ -75,12 +80,6 @@ class PropertyRepository(BaseRepository[Property]):
         """
         # Convert your filter list into valid SQLAlchemy conditions
         filter_conditions = PropertyRepository._get_filter_conditions(filters)
-
-        # Build the query:
-        # 1) Select from PropertyLocation
-        # 2) Join on Property to filter by property-specific conditions
-        # 3) Apply filter conditions
-        # 4) Order by Property.created_at (descending)
 
         stmt = (
             select(PropertyLocation)

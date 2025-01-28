@@ -40,8 +40,8 @@ class CreatePropertySchema(BaseModel):
 
 
 class MapSearchSchema(BaseModel):
-    areaFrom: Optional[float] = None
-    areaTo: Optional[float] = None
+    areaFrom: Optional[int] = None
+    areaTo: Optional[int] = None
     priceRangeMin: Optional[float] = None
     priceRangeMax: Optional[float] = None
     roomNumber: Optional[str] = None  # Comma-separated string
@@ -95,6 +95,7 @@ class MapSearchSchema(BaseModel):
         # If roomNumber is set and not empty
         if self.roomNumber:
             room_numbers = [int(num) for num in self.roomNumber.split(',')]
+            print(room_numbers)
             filters.append((room_numbers, "info.bedrooms", "in"))
 
         # If category is set (string)
@@ -103,6 +104,7 @@ class MapSearchSchema(BaseModel):
 
         # If city is set (string)
         if self.city:
+            print(self.city)
             filters.append((self.city, "location.address", "ilike"))
 
         if self.livingAreaFrom is not None and self.livingAreaFrom > 0:
