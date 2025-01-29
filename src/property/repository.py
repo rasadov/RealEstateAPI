@@ -165,13 +165,10 @@ class PropertyRepository(BaseRepository[Property]):
             offset: int,
             ) -> Sequence[Listing]:
         """Get listings page"""
-        subquery = (
-            select(Listing.id)
-            .join(Listing.properties)
-            .group_by(Listing.id)
-            .having(func.count(Property.id) > 0)
-            .subquery()
-        )
+        # subquery = (
+        #     select(Listing.id)
+        #     .filter
+        # )
 
         result = await self.session.execute(
             select(Listing)
@@ -185,7 +182,9 @@ class PropertyRepository(BaseRepository[Property]):
                 ),
                 joinedload(Listing.images)
             )
-            .filter(Listing.id.in_(subquery))
+            .filter_by(
+                is_active = True,
+            )
             .order_by(Listing.id.desc())
             .limit(limit)
             .offset(offset)
@@ -361,8 +360,7 @@ class PropertyRepository(BaseRepository[Property]):
         return result.scalar()
 
     async def get_my_listings(
-            self,
-            agent_id: int):
+            self):
         result = await self.session.execute(
             select(Listing)
             .options(
@@ -375,7 +373,6 @@ class PropertyRepository(BaseRepository[Property]):
                 ),
                 joinedload(Listing.images)
             )
-            .filter(Listing.agent_id == agent_id)
         )
         return result.scalars().unique().all()
 

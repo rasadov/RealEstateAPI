@@ -114,8 +114,8 @@ class PropertyService:
             user_id: int,
             ) -> Sequence[Listing]:
         """Get user listings"""
-        agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
-        return await self.property_repository.get_my_listings(agent.id)
+        await self.user_repository.get_agent_by_or_404(user_id=user_id)
+        return await self.property_repository.get_my_listings()
 
     async def get_listings_page(
             self,
