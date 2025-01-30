@@ -113,13 +113,9 @@ class UserRepository(BaseRepository[User]):
             )
 
     async def get_users_page_by(
-            self,
-            limit: int,
-            offset: int,
-            **kwargs,
+            self
             ) -> Sequence[User]:
         """Get users page"""
-        print(kwargs)
         result = await self.session.execute(
             select(
                 User.id,
@@ -134,8 +130,6 @@ class UserRepository(BaseRepository[User]):
                 joinedload(User.image)
             )
             .filter(User.id.in_([18, 34, 35, 37, 38, 39]))
-            .limit(limit)
-            .offset(offset)
             )
         return result.scalars().all()
 

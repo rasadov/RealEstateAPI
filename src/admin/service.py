@@ -45,8 +45,7 @@ class AdminService:
         if role is not None:
             filters["role"] = role
 
-        return await self.user_repository.get_users_page_by(
-            elements, (page - 1) * elements, **filters)
+        return await self.user_repository.get_users_page_by()
 
     async def get_agent_page(
             self,

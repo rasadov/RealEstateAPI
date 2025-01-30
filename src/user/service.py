@@ -43,11 +43,7 @@ class UserService:
             elements: int,
             ) -> Sequence[User]:
         """Get agents page"""
-        return await self.user_repository.get_users_page_by(
-            offset=page-1,
-            limit=elements,
-            role="agent",
-            )
+        return await self.user_repository.get_users_page_by()
 
     async def add_review(
             self,

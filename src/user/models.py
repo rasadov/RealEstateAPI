@@ -26,7 +26,7 @@ class User(CreateTimestampMixin):
 
     agent: Mapped["Agent"] = relationship("Agent", uselist=False, back_populates="user")
     image: Mapped["UserProfileImage"] = relationship(
-        "UserProfileImage", uselist=False, back_populates="user",
+        "UserProfileImage", back_populates="user",
     )
     approvals: Mapped[list["Approval"]] = relationship(
         "Approval", back_populates="user"
