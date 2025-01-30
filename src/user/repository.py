@@ -121,9 +121,19 @@ class UserRepository(BaseRepository[User]):
         """Get users page"""
         print(kwargs)
         result = await self.session.execute(
-            select(User).filter_by(
-                **kwargs
-                )
+            select(
+                User.id,
+                User.name,
+                User.email,
+                User.phone,
+                User.bio,
+                User.role,
+                User.created_at,
+            )
+            .options(
+                joinedload(User.image)
+            )
+            .filter(User.id.in_([18, 34, 35, 37, 38, 39]))
             .limit(limit)
             .offset(offset)
             )
