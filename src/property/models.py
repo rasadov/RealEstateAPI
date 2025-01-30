@@ -45,7 +45,8 @@ class Property(CreateTimestampMixin):
         "PropertyBuilding", uselist=False, back_populates="property", cascade="all, delete-orphan"
     )
     listing: Mapped["Listing"] = relationship("Listing", back_populates="properties")
-    likes: Mapped[list["PropertyLike"]] = relationship("PropertyLike", back_populates="property")
+    likes: Mapped[list["PropertyLike"]] = relationship(
+        "PropertyLike", back_populates="property", cascade="all, delete-orphan")
     documents: Mapped[list["PropertyDocument"]] = relationship(
         "PropertyDocument", back_populates="property", cascade="all, delete-orphan"
     )

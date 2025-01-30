@@ -21,6 +21,15 @@ async def get_properties_page(
     return await property_service.get_properties_page(
         schema)
 
+@router.get("/popular")
+async def get_popular_properties(
+    elements: int = Query(10),
+    page: int = Query(1),
+    property_service: PropertyService = Depends(get_property_service)
+    ):
+    return await property_service.get_popular_properties(
+        limit=elements, offset=(page-1)*elements)
+
 @router.get("/map")
 async def get_map_locations(
     schema: MapSearchSchema = Depends(MapSearchSchema),

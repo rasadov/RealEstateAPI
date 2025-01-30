@@ -76,6 +76,15 @@ class PropertyService:
             "results": count,
         }
 
+    async def get_popular_properties(
+            self,
+            limit: int,
+            offset: int,
+            ) -> Sequence[Property]:
+        """Get popular properties"""
+        return await self.property_repository.get_popular_properties(
+            limit, offset)
+
     async def get_map_locations(
             self,
             schema: MapSearchSchema,

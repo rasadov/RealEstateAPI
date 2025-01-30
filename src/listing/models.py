@@ -38,7 +38,7 @@ class Listing(CustomBase):
     )
 
     properties: Mapped[list["Property"]] = relationship(
-        "Property", cascade="all, delete-orphan"
+        "Property", cascade="all, delete-orphan", back_populates="listing"
         )
     agent: Mapped["Agent"] = relationship("Agent")
     images: Mapped[list["ListingImage"]] = relationship(

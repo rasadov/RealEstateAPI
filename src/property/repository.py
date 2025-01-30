@@ -372,7 +372,7 @@ class PropertyRepository(BaseRepository[Property]):
                     joinedload(Property.images)
                 ),
                 joinedload(Listing.images)
-            )
+            ).filter_by(is_active=True)
         )
         return result.scalars().unique().all()
 
@@ -441,7 +441,9 @@ class PropertyRepository(BaseRepository[Property]):
             select(Property)
             .options(
                 joinedload(Property.owner).
-                joinedload(Agent.user).
+                joinedload(Agent.user).load_only(
+                    User.name, User.id, User.phone, User.email
+                ).
                 joinedload(User.image),
                 joinedload(Property.location),
                 joinedload(Property.images),
@@ -524,6 +526,31 @@ class PropertyRepository(BaseRepository[Property]):
                 PropertyLike.user_id == user_id
             )
             .order_by(PropertyLike.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return result.scalars().unique().all()
+
+    async def get_popular_properties(
+            self,
+            limit: int,
+            offset: int,
+            ) -> Sequence[Property]:
+        filters = self._get_filter_conditions([])
+        """Get popular properties"""
+        result = await self.session.execute(
+            select(Property)
+            .join(Property.likes)
+            .options(
+                joinedload(Property.owner),
+                joinedload(Property.images),
+                joinedload(Property.location),
+                joinedload(Property.info)
+            )
+            .filter(
+                and_(*filters)
+            )
+            .order_by(Property.views.desc())
             .limit(limit)
             .offset(offset)
         )
@@ -813,11 +840,11 @@ class PropertyRepository(BaseRepository[Property]):
             is_sold: bool,
             ) -> None:
         """Delete property"""
-        property = await self.get_or_404(property_id)
+        property_obj = await self.get_or_404(property_id)
 
-        property.is_sold = is_sold
+        property_obj.is_sold = is_sold
         if not is_sold:
-            await self.delete(property)
+            await self.delete(property_obj)
         await self.commit()
 
         queue_delete_property.delay(property_id)
