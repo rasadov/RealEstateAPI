@@ -82,6 +82,8 @@ class PropertyService:
             offset: int,
             ) -> Sequence[Property]:
         """Get popular properties"""
+        if offset < 0:
+            offset = 0
         return await self.property_repository.get_popular_properties(
             limit, offset)
 
@@ -153,7 +155,7 @@ class PropertyService:
     async def get_favorites_ids(
             self,
             user_id: int,
-            ) -> Sequence[Property]:
+            ) -> Sequence[int]:
         """Get favorite properties"""
         return await self.property_repository.get_favorites_ids(user_id)
 
@@ -175,7 +177,7 @@ class PropertyService:
 
             if listing:
                 return await self.property_repository.create_property(
-                    schema, images, agent.id, user_id, listing.id)
+                    schema, images, documents, agent.id, user_id, listing.id)
         return await self.property_repository.create_property(
             schema, images, documents, agent.id, user_id)
     

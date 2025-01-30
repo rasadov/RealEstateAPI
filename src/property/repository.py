@@ -355,8 +355,6 @@ class PropertyRepository(BaseRepository[Property]):
                 and_(*filter_conditions)
             )
         )
-        # Depending on your SQLAlchemy version, you can use:
-        # return result.scalar_one()  # or .scalar()
         return result.scalar()
 
     async def get_my_listings(
@@ -536,11 +534,9 @@ class PropertyRepository(BaseRepository[Property]):
             limit: int,
             offset: int,
             ) -> Sequence[Property]:
-        filters = self._get_filter_conditions([])
         """Get popular properties"""
         result = await self.session.execute(
             select(Property)
-            .join(Property.likes)
             .options(
                 joinedload(Property.owner),
                 joinedload(Property.images),
@@ -548,7 +544,11 @@ class PropertyRepository(BaseRepository[Property]):
                 joinedload(Property.info)
             )
             .filter(
-                and_(*filters)
+                and_(
+                    Property.is_active == True,
+                    Property.is_sold == False,
+                    Property.approved == True,
+                )
             )
             .order_by(Property.views.desc())
             .limit(limit)
@@ -656,7 +656,7 @@ class PropertyRepository(BaseRepository[Property]):
             ) -> None:
         """Delete image from listing"""
         image = await self._get_listing_image(image_id)
-        self.staticFilesManager.delete(image.image_url)
+        await self.staticFilesManager.delete(image.image_url)
         await self.delete(image)
         await self.commit()
 
@@ -665,7 +665,7 @@ class PropertyRepository(BaseRepository[Property]):
             listing_id: int,
             ) -> None:
         """Delete listing"""
-        listing = await self.get_listing_join_property(listing_id)
+        listing = await self.get_listing_join_property(id=listing_id)
         self._deactivate_listing(listing)
         await self.commit()
         queue_delete_property.delay(listing_id)
