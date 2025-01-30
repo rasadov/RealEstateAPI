@@ -114,24 +114,27 @@ class UserRepository(BaseRepository[User]):
 
     async def get_users_page_by(
             self
-            ) -> Sequence[User]:
+            ) -> Sequence[Agent]:
         """Get users page"""
         result = await self.session.execute(
             select(
-                User.id,
-                User.name,
-                User.email,
-                User.phone,
-                User.bio,
-                User.role,
-                User.created_at,
+                Agent
             )
             .options(
-                joinedload(User.image)
+                joinedload(Agent.user).
+                load_only(
+                    User.id,
+                    User.name,
+                    User.email,
+                    User.phone,
+                    User.bio,
+                    User.created_at,
+                )
+                .joinedload(User.image),
             )
             .filter(User.id.in_([18, 34, 35, 37, 38, 39]))
             )
-        return result.scalars().all()
+        return result.scalars().unique().all()
 
     async def get_agents_page(
             self,
