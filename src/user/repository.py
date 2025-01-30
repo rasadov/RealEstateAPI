@@ -120,6 +120,7 @@ class UserRepository(BaseRepository[User]):
             select(
                 Agent
             )
+            .join(User)
             .options(
                 joinedload(Agent.user).
                 load_only(

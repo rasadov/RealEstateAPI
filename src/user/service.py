@@ -4,7 +4,7 @@ from typing import Sequence
 from src.base.utils import send_email
 from src.auth import exceptions
 from src.user.repository import UserRepository
-from src.user.models import User
+from src.user.models import User, Agent
 from src.auth import oauth2
 
 @dataclass
@@ -41,7 +41,7 @@ class UserService:
             self,
             page: int,
             elements: int,
-            ) -> Sequence[User]:
+            ) -> Sequence[Agent]:
         """Get agents page"""
         return await self.user_repository.get_users_page_by()
 
