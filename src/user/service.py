@@ -28,14 +28,6 @@ class UserService:
         """Get user"""
         user = await self.user_repository.get_or_401(id)
         return user.dict()
-    
-    async def get_agent(
-            self,
-            agent_id: int,
-            ) -> dict:
-        """Get agent"""
-        agent = await self.user_repository.get_agent_by_or_404(id=agent_id)
-        return agent.dict()
 
     async def get_agents_page(
             self,

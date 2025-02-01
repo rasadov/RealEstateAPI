@@ -37,8 +37,8 @@ async def get_agent(
     agent_id: int,
     user_service: UserService = Depends(get_user_service)
     ):
-    return await user_service.get_agent(
-        agent_id,
+    return await user_service.user_repository.get_agent_by(
+        id=agent_id,
         )
 
 @router.get("/page/agents")
