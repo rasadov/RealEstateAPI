@@ -7,6 +7,8 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.future import select
 
 from src.base.repository import BaseRepository
+from src.listing.models import Listing
+from src.property.models import Property
 from src.staticfiles.manager import BaseStaticFilesManager
 from src.user.models import User, Agent, Review
 from src.auth import exceptions
@@ -85,8 +87,13 @@ class UserRepository(BaseRepository[User]):
                 .load_only(User.id, User.name, User.email, User.phone, User.bio, User.created_at)
                 .joinedload(User.image),
                 joinedload(Agent.reviews),
-                joinedload(Agent.properties),
-                joinedload(Agent.listings),
+                joinedload(Agent.properties).options(
+                    joinedload(Property.location),
+                    joinedload(Property.info),
+                    joinedload(Property.images),
+                ),
+                joinedload(Agent.listings)
+                .joinedload(Listing.images),
                 ).filter_by(
                 **kwargs
                 ))
