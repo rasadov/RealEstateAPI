@@ -82,8 +82,11 @@ class UserRepository(BaseRepository[User]):
         result = await self.session.execute(
             select(Agent).options(
                 joinedload(Agent.user)
+                .load_only(User.id, User.name, User.email, User.phone, User.bio, User.created_at)
                 .joinedload(User.image),
                 joinedload(Agent.reviews),
+                joinedload(Agent.properties),
+                joinedload(Agent.listings),
                 ).filter_by(
                 **kwargs
                 ))

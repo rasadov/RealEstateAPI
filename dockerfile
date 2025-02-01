@@ -6,7 +6,7 @@ WORKDIR /src
 
 # Copy the requirements file into the container at /src
 
-# Copy the current directory 
+# Copy the current directory
 
 COPY requirements.txt /src
 

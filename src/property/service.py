@@ -24,11 +24,11 @@ class PropertyService:
 
     async def get_property_by_id(
             self,
-            id: int,
+            property_id: int,
             current_user: TokenData,
             ) -> Property:
         """Get property by id"""
-        prop = await self.property_repository.get_or_404(id)
+        prop = await self.property_repository.get_or_404(property_id)
         available = False in (prop.is_active, prop.is_sold, prop.approved)
         if not available:
             if current_user:
@@ -243,9 +243,9 @@ class PropertyService:
             ) -> Property:
         """Update property"""
         agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
-        property = await self.property_repository.get_or_404(property_id)
+        property_obj = await self.property_repository.get_or_404(property_id)
 
-        if property.owner_id != agent.id:
+        if property_obj.owner_id != agent.id:
             raise auth_exceptions.Unauthorized
 
         return await self.property_repository.update_property(
@@ -275,9 +275,9 @@ class PropertyService:
             ) -> None:
         """Delete property image"""
         agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
-        property = await self.property_repository.get_or_404(property_id)
+        property_obj = await self.property_repository.get_or_404(property_id)
 
-        if property.owner_id != agent.id:
+        if property_obj.owner_id != agent.id:
             raise auth_exceptions.Unauthorized
 
         return await self.property_repository.delete_image_from_property(image_id)
@@ -290,9 +290,9 @@ class PropertyService:
             ) -> None:
         """Delete property"""
         agent = await self.user_repository.get_agent_by_or_404(user_id=user_id)
-        property = await self.property_repository.get_or_404(property_id)
+        property_obj = await self.property_repository.get_or_404(property_id)
 
-        if property.owner_id != agent.id:
+        if property_obj.owner_id != agent.id:
             raise auth_exceptions.Unauthorized
 
         return await self.property_repository.delete_property(
@@ -334,12 +334,12 @@ class PropertyService:
             ) -> dict:
         """Like property"""
         user = await self.user_repository.get_or_401(user_id)
-        property = await self.property_repository.get_or_404(property_id)
+        property_obj = await self.property_repository.get_or_404(property_id)
         liked = await self.property_repository.get_like(user_id, property_id)
 
         if liked:
-            await self.property_repository.unlike_property(property.id, user.id)
+            await self.property_repository.unlike_property(property_obj.id, user.id)
             return {"detail": "Property unliked successfully"}
 
-        await self.property_repository.like_property(property.id, user.id)
+        await self.property_repository.like_property(property_obj.id, user.id)
         return {"detail": "Property liked successfully"}

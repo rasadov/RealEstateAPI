@@ -21,7 +21,7 @@ class Property(CreateTimestampMixin):
     price: Mapped[float] = mapped_column(Float, nullable=False)
     currency: Mapped[str] = mapped_column(String, nullable=False, default="$")
     original_price: Mapped[float] = mapped_column(Float, nullable=True)
-    approved: Mapped[bool] = mapped_column(Boolean, default=False)
+    approved: Mapped[bool] = mapped_column(Boolean, default=True)
     is_sold: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     listing_id: Mapped[int] = mapped_column(
