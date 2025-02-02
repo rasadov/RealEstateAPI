@@ -13,21 +13,21 @@ class CreatePropertySchema(BaseModel):
     residentialComplex: Optional[str]
     description: str
     price: float
-    currency: str
+    currency: Optional[str] = "$"
     # Location
-    latitude: float
-    longitude: float
-    address: str
+    latitude: Optional[float]
+    longitude: Optional[float]
+    address: Optional[str]
     # Info
-    floor: int
-    totalArea: float
-    livingArea: float
-    rooms: int
-    livingRoom: int
-    bedroom: int
-    bathroom: int
-    balcony: int
-    buildingFloors: int
+    floor: Optional[int]
+    totalArea: Optional[float]
+    livingArea: Optional[float]
+    rooms: Optional[int]
+    livingRoom: Optional[int]
+    bedroom: Optional[int]
+    bathroom: Optional[int]
+    balcony: Optional[int]
+    buildingFloors: Optional[int]
     year: Optional[int]
     renovation: Optional[str]
     apartmentStories: Optional[int]
@@ -166,5 +166,5 @@ class MapSearchSchema(BaseModel):
 
 class SearchPropertySchema(MapSearchSchema):
     page: int = 1
-    elements: int = 10
+    elements: int = 50
 
