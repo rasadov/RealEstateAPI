@@ -7,12 +7,12 @@ from src.base.schemas import as_form
 @as_form
 class CreateListingSchema(BaseModel):
     # General
-    residentialComplex: str
-    category: str
-    description: Optional[str] = None
+    residentialComplex: Optional[str] = "No title"
+    category: Optional[str] = "Apartment"
+    description: Optional[str] = "No description"
     # Location
-    latitude: float
-    longitude: float
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     address: Optional[str] = None
     # Info
     buildingArea: Optional[float] = None

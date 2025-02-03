@@ -8,11 +8,11 @@ from src.base.schemas import as_form
 @as_form
 class CreatePropertySchema(BaseModel):
     # General
-    title: str
-    category: str
+    title: Optional[str] = "No title"
+    category: Optional[str] = "Apartment"
     residentialComplex: Optional[str]
-    description: str
-    price: float
+    description: Optional[str] = "No description"
+    price: Optional[float] = 1000.0
     currency: Optional[str] = "$"
     # Location
     latitude: Optional[float]

@@ -22,11 +22,11 @@ def validate_file(
     file_size_mb = file.file.tell() / (1024 * 1024)
     file.file.seek(0)  # Reset file pointer to start
 
-    if file_size_mb > max_file_size_mb:
-        raise exceptions.FileTooLarge
+    #if file_size_mb > max_file_size_mb:
+    #    raise exceptions.FileTooLarge
 
-    if file.content_type not in allowed_image_types:
-        raise exceptions.UnsupportedFileType
+    #if file.content_type not in allowed_image_types:
+    #    raise exceptions.UnsupportedFileType
 
 async def process_image(
         file: UploadFile,
