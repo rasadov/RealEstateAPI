@@ -1,5 +1,5 @@
 """User routes module."""
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, File, UploadFile
 
 from src.user.service import UserService
 from src.user.dependencies import get_user_service
@@ -80,6 +80,17 @@ async def add_review(
         schema.agent_id,
         schema.rating,
         schema.comment,
+        )
+
+@router.post("/profile/image")
+async def upload_image(
+    image: UploadFile = File(...),
+    user: TokenData = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service)
+    ):
+    return await user_service.upload_image(
+        user.user_id,
+        image
         )
 
 @router.patch("/change-password")

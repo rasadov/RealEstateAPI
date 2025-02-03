@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from typing import Sequence
 
+from fastapi import UploadFile
+
 from src.base.utils import send_email
 from src.auth import exceptions
 from src.user.repository import UserRepository
-from src.user.models import User, Agent
+from src.user.models import User, Agent, UserProfileImage
 from src.auth import oauth2
 
 @dataclass
@@ -36,6 +38,25 @@ class UserService:
             ) -> Sequence[Agent]:
         """Get agents page"""
         return await self.user_repository.get_users_page_by()
+
+    async def upload_image(
+            self,
+            user_id: int,
+            image: UploadFile,
+            ) -> dict:
+        """Upload user image"""
+        user = await self.user_repository.get_or_401(user_id)
+        url = await self.user_repository.staticFilesManager.upload(
+            image,
+            f"users/{user.id}/{image.filename}"
+            )
+        new_profile_image = UserProfileImage(
+            user_id=user.id,
+            image_url=url,
+        )
+        await self.user_repository.add(new_profile_image)
+        await self.user_repository.commit()
+
 
     async def add_review(
             self,
