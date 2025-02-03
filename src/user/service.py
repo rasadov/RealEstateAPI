@@ -46,6 +46,23 @@ class UserService:
             ) -> dict:
         """Upload user image"""
         user = await self.user_repository.get_or_401(user_id)
+
+        existing_images = await self.user_repository.get_user_profile_images(user.id)
+
+        # Delete each existing image both from storage and the database
+        for old_image in existing_images:
+            try:
+                # Delete the image file from storage
+                await self.user_repository.staticFilesManager.delete(old_image.image_url)
+            except Exception as e:
+                # Optionally log the error or handle failure to delete from storage
+                print(f"Error deleting file {old_image.image_url}: {e}")
+            # Remove the image record from the database
+            await self.user_repository.delete(old_image)
+
+        # Commit deletions (you might want to commit after each delete if necessary)
+        await self.user_repository.commit()
+
         url = await self.user_repository.staticFilesManager.upload(
             image,
             f"users/{user.id}/{image.filename}"
@@ -54,9 +71,9 @@ class UserService:
             user_id=user.id,
             image_url=url,
         )
-        await self.user_repository.add(new_profile_image)
+        self.user_repository.add(new_profile_image)
         await self.user_repository.commit()
-
+        return {"image_url": url}
 
     async def add_review(
             self,

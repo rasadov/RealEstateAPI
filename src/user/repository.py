@@ -10,7 +10,7 @@ from src.base.repository import BaseRepository
 from src.listing.models import Listing
 from src.property.models import Property
 from src.staticfiles.manager import BaseStaticFilesManager
-from src.user.models import User, Agent, Review
+from src.user.models import User, Agent, Review, UserProfileImage
 from src.auth import exceptions
 
 
@@ -121,6 +121,17 @@ class UserRepository(BaseRepository[User]):
             exceptions.Unauthorized,
             **kwargs
             )
+
+    async def get_user_profile_images(
+            self,
+            user_id: int
+    ) -> Sequence[UserProfileImage]:
+        """Get user profile images"""
+        result = await self.session.execute(
+            select(UserProfileImage)
+            .filter(UserProfileImage.user_id == user_id)
+        )
+        return result.scalars().all()
 
     async def get_users_page_by(
             self
