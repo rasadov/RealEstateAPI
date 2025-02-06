@@ -167,7 +167,7 @@ class AdminService:
             self,
             token: TokenData,
             property_id: int,
-            ) -> Property:
+            ) -> dict[str, str]:
         """Approve property."""
         user_obj = await self.user_repository.get_or_401(token.user_id)
         level = user_obj.level
@@ -182,11 +182,30 @@ class AdminService:
             "detail": "Property approved",
         }
 
+    async def disapprove_property(
+            self,
+            token: TokenData,
+            property_id: int,
+            ) -> dict[str, str]:
+        """Disapprove property."""
+        user_obj = await self.user_repository.get_or_401(token.user_id)
+        level = user_obj.level
+
+        if level < 2:
+            raise exceptions.Unauthorized
+
+        property_obj = await self.property_repository.get_or_404(property_id)
+        property_obj.disapprove()
+        await self.property_repository.commit()
+        return {
+            "detail": "Property disapproved",
+        }
+
     async def deactivate_property(
             self,
             token: TokenData,
             property_id: int,
-            ) -> Property:
+            ) -> dict[str, str]:
         """Deactivate property."""
         user_obj = await self.user_repository.get_or_401(token.user_id)
         level = user_obj.level
@@ -215,4 +234,4 @@ class AdminService:
             raise exceptions.Unauthorized
 
         return await self.property_repository.get_properties_page(
-            elements, (page - 1) * elements)
+            elements, (page - 1) * elements, [])

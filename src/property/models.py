@@ -55,6 +55,9 @@ class Property(CreateTimestampMixin):
         self.approved = True
         self.is_active = True
 
+    def disapprove(self) -> None:
+        self.approved = False
+
     def deactivate(self) -> None:
         self.is_active = False
 

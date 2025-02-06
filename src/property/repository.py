@@ -344,7 +344,7 @@ class PropertyRepository(BaseRepository[Property]):
                 Property.created_at.desc()
             ).limit(limit).offset(offset)
         )
-        return result.scalars().all()
+        return result.scalars().unique().all()
 
     async def get_properties_count_filtered(self, filters: list[tuple]) -> int:
         """Get the number of properties matching the given filters."""

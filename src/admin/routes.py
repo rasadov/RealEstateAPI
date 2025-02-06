@@ -38,8 +38,8 @@ async def delete_user(
 
 @router.get("/properties")
 async def get_properties(
-        page: int,
-        elements: int,
+        page: int = 1,
+        elements: int = 50,
         current_user: TokenData = Depends(get_current_user),
         admin_service: AdminService = Depends(get_admin_service),
 ):
@@ -79,6 +79,14 @@ async def approve_property(
     current_user: TokenData = Depends(get_current_user)
     ):
     return await admin_service.approve_property(current_user, property_id)
+
+@router.patch("/disapprove-property")
+async def disapprove_property(
+    property_id: int,
+    admin_service: AdminService = Depends(get_admin_service),
+    current_user: TokenData = Depends(get_current_user)
+    ):
+    return await admin_service.disapprove_property(current_user, property_id)
 
 @router.patch("/deactivate-property")
 async def deactivate_property(
