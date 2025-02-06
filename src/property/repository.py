@@ -336,7 +336,7 @@ class PropertyRepository(BaseRepository[Property]):
             options(
             joinedload(Property.owner)
                 .lazyload(Agent.user),
-            joinedload(Property.listing),
+            # joinedload(Property.listing),
             joinedload(Property.images),
             # joinedload(Property.location),
             joinedload(Property.info)

@@ -94,8 +94,11 @@ class AdminService:
         if level < 1:
             raise exceptions.Unauthorized
 
-        return await self.property_repository.get_properties_page_admin(
-            elements, (page - 1) * elements)
+        return {
+            "properties": await self.property_repository.get_properties_page_admin(
+                elements, (page - 1) * elements),
+            "total": await self.property_repository.get_properties_count()
+        }
 
     async def get_unapproved_properties_page(
             self,
