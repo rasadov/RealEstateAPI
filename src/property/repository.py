@@ -335,10 +335,10 @@ class PropertyRepository(BaseRepository[Property]):
             select(Property).
             options(
             joinedload(Property.owner)
-                .joinedload(Agent.user),
+                .lazyload(Agent.user),
             joinedload(Property.listing),
             joinedload(Property.images),
-            joinedload(Property.location),
+            # joinedload(Property.location),
             joinedload(Property.info)
             ).order_by(
                 Property.created_at.desc()
