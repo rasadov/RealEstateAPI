@@ -47,11 +47,15 @@ class AuthService:
         })
         response.set_cookie(
             "access_token",
-            tokens["access_token"]
+            tokens["access_token"],
+            httponly=True,
+            samesite="None",
             )
         response.set_cookie(
             "refresh_token",
-            tokens["refresh_token"]
+            tokens["refresh_token"],
+            httponly=True,
+            samesite="None",
             )
 
         return response
@@ -123,11 +127,15 @@ class AuthService:
             })
         response.set_cookie(
             "access_token",
-            tokens["access_token"]
+            tokens["access_token"],
+            httponly=True,
+            samesite="None",
             )
         response.set_cookie(
             "refresh_token",
-            tokens["refresh_token"]
+            tokens["refresh_token"],
+            httponly=True,
+            samesite="None",
             )
 
         return response

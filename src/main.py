@@ -31,9 +31,10 @@ app.router.lifespan_context = lifespan
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://flatty.ai",
-                   "https://flatty-admin-panel-umber.vercel.app",
-                   "https://admin.flatty.ai",],
+    # allow_origins=["https://flatty.ai",
+    #                "https://flatty-admin-panel-umber.vercel.app",
+    #                "https://admin.flatty.ai",],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
